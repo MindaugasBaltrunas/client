@@ -32,7 +32,7 @@ function App() {
             Close Modal
           </button>
         </Modal>
-      </div>{" "}
+      </div>
     </>
   );
 }
