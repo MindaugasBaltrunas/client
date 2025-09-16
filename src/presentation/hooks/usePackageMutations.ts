@@ -4,6 +4,7 @@ import { PackageRepository, createApiPackageRepository } from '../../infrastruct
 import { createPackageApiClient } from '../../infrastructure/api/clients/PackageApiClient';
 import { ApiClientConfig } from '../../config/type';
 import { ApiError } from '../../shared/errors/ApiError';
+import { PackageStatus } from '../../domains/packageStatus/packageStatus';
 
 export type MutationConfig<TData = unknown, TError = ApiError, TVariables = unknown> = UseMutationOptions<
     TData,
@@ -17,32 +18,16 @@ export type MutationConfig<TData = unknown, TError = ApiError, TVariables = unkn
     toastHandler?: { success?: (msg: string) => void; error?: (msg: string) => void };
 };
 
-// -----------------------------
-// Status utils
-// -----------------------------
-export enum PackageStatus {
-    CREATED = 0,
-    IN_TRANSIT = 1,
-    OUT_FOR_DELIVERY = 2,
-    DELIVERED = 3,
-    RETURNED = 4,
-    CANCELED = 5,
-}
-
 const statusNameMap: Record<number, string> = {
-    [PackageStatus.CREATED]: 'Created',
-    [PackageStatus.IN_TRANSIT]: 'In Transit',
-    [PackageStatus.OUT_FOR_DELIVERY]: 'Out for Delivery',
-    [PackageStatus.DELIVERED]: 'Delivered',
-    [PackageStatus.RETURNED]: 'Returned',
-    [PackageStatus.CANCELED]: 'Canceled',
+    [PackageStatus.Created]: 'Created',
+    [PackageStatus.Sent]: 'In Transit',
+    [PackageStatus.Accepted]: 'Delivered',
+    [PackageStatus.Cancelled]: 'Canceled',
+    [PackageStatus.Returned]: 'Returned',
 };
 
 export const getStatusName = (status: number): string => statusNameMap[status] ?? 'Unknown';
 
-// -----------------------------
-// usePackageMutations factory
-// -----------------------------
 export const usePackageMutations = (
     config: ApiClientConfig,
     defaultToastHandler?: { success?: (msg: string) => void; error?: (msg: string) => void }
@@ -51,9 +36,6 @@ export const usePackageMutations = (
     const apiClient = createPackageApiClient(config);
     const repository: PackageRepository = createApiPackageRepository(apiClient);
 
-    // -----------------------------
-    // useCreatePackage
-    // -----------------------------
     const useCreatePackage = (options?: MutationConfig<Package, ApiError, Package>) =>
         useMutation<Package, ApiError, Package>({
             mutationFn: (data: Package) => repository.create(data),
@@ -78,17 +60,14 @@ export const usePackageMutations = (
             ...options,
         });
 
-    // -----------------------------
-    // useUpdatePackageStatus
-    // -----------------------------
     const useUpdatePackageStatus = (
         options?: MutationConfig<Package, ApiError, { packageId: string; status: number }>
     ) =>
         useMutation<
-            Package, // TData
-            ApiError, // TError
-            { packageId: string; status: number }, // TVariables
-            { previousPackage?: Package; packageId?: string } // TContext
+            Package,
+            ApiError,
+            { packageId: string; status: number },
+            { previousPackage?: Package; packageId?: string }
         >({
             mutationFn: ({ packageId, status }) => repository.updateStatus(packageId, status),
             onMutate: async ({ packageId, status }) => {

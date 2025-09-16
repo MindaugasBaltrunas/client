@@ -1,22 +1,13 @@
 import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { createPackageApiClient } from '../api/clients/PackageApiClient';
 import { Package } from '../../domains/package/package';
-import { mapPackageApiResponse, mapPackageApiList } from '../mappers/packegeMapper';
+import { packageQueryKeys } from './utils/packageQueryKeys';
+import { handleApiError } from '../api/errors/ApiErrorHandler';
+import { ApiError } from '../../shared/errors/ApiError';
+import { parsePackages } from './utils/parseData';
+import { MappedPackage, MappedPackageList, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
 
-export const packageQueryKeys = {
-    all: ['packages'] as const,
-    lists: () => [...packageQueryKeys.all, 'list'] as const,
-    details: () => [...packageQueryKeys.all, 'detail'] as const,
-    detail: (id: string) => [...packageQueryKeys.details(), id] as const,
-    history: (id: string) => [...packageQueryKeys.all, 'history', id] as const,
-};
 
-const handleNotFound = (error: unknown): null => {
-    if (error instanceof Error && /(404|not found)/i.test(error.message)) {
-        return null;
-    }
-    throw error;
-};
 
 export const createApiPackageRepository = (packageApiClient: ReturnType<typeof createPackageApiClient>) => {
     return {
@@ -25,7 +16,9 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                 queryKey: packageQueryKeys.lists(),
                 queryFn: async () => {
                     const apiRes = await packageApiClient.getPackages();
-                    return mapPackageApiList(apiRes);
+                    const packageResponse = parsePackages(apiRes);
+                    const result: MappedPackageList = PackageListSchema.parse(packageResponse);
+                    return result;
                 },
                 ...options,
             }),
@@ -36,9 +29,15 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                 queryFn: async () => {
                     try {
                         const apiRes = await packageApiClient.getPackage(id);
-                        return mapPackageApiResponse(apiRes);
+                        const result: MappedPackage = PackageSchema.parse(apiRes);
+                        return result;
                     } catch (error) {
-                        return handleNotFound(error);
+                        handleApiError(error, `getPackage(${id})`);
+
+                        if (error instanceof ApiError && error.status === 404) {
+                            return null;
+                        }
+                        throw error;
                     }
                 },
                 enabled: !!id,
@@ -49,8 +48,19 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
             useQuery<Package[] | null>({
                 queryKey: packageQueryKeys.history(id),
                 queryFn: async () => {
-                    const apiRes = await packageApiClient.getPackageHistory(id);
-                    return mapPackageApiList(apiRes);
+                    try {
+                        const apiRes = await packageApiClient.getPackageHistory(id);
+                        const packageResponse = parsePackages(apiRes);
+                        const result: MappedPackageList = PackageListSchema.parse(packageResponse);
+                        return result;
+                    } catch (error) {
+                        handleApiError(error, `getPackageHistory(${id})`);
+
+                        if (error instanceof ApiError && error.status === 404) {
+                            return null;
+                        }
+                        throw error;
+                    }
                 },
                 enabled: !!id,
                 ...options,
@@ -60,8 +70,14 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
             const queryClient = useQueryClient();
             return useMutation<Package, Error, Package>({
                 mutationFn: async (data: Package) => {
-                    const apiRes = await packageApiClient.createPackage(data);
-                    return mapPackageApiResponse(apiRes);
+                    try {
+                        const apiRes = await packageApiClient.createPackage(data);
+                        const result: MappedPackage = PackageSchema.parse(apiRes.data);
+                        return result;
+                    } catch (error) {
+                        handleApiError(error, 'createPackage');
+                        throw error;
+                    }
                 },
                 onSuccess: (pkg) => {
                     queryClient.invalidateQueries({ queryKey: packageQueryKeys.lists() });
@@ -75,8 +91,14 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
             const queryClient = useQueryClient();
             return useMutation<Package, Error, { packageId: string; status: number }>({
                 mutationFn: async ({ packageId, status }) => {
-                    const apiRes = await packageApiClient.updatePackageStatus(packageId, status);
-                    return mapPackageApiResponse(apiRes);
+                    try {
+                        const apiRes = await packageApiClient.updatePackageStatus(packageId, status);
+                        const result: MappedPackage = PackageSchema.parse(apiRes.data);
+                        return result;
+                    } catch (error) {
+                        handleApiError(error, `updatePackageStatus(${packageId})`);
+                        throw error;
+                    }
                 },
                 onSuccess: (pkg) => {
                     queryClient.setQueryData(packageQueryKeys.detail(pkg.id), pkg);
@@ -87,33 +109,65 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
             });
         },
 
+
         async getAll(): Promise<Package[]> {
-            const apiRes = await packageApiClient.getPackages();
-            return mapPackageApiList(apiRes);
+            try {
+                const apiRes = await packageApiClient.getPackages();
+                const packageResponse = parsePackages(apiRes);
+                const result: MappedPackageList = PackageListSchema.parse(packageResponse);
+                return result;
+            } catch (error) {
+                handleApiError(error, 'getAll');
+                throw error;
+            }
         },
 
         async findById(id: string): Promise<Package | null> {
             try {
                 const apiRes = await packageApiClient.getPackage(id);
-                return mapPackageApiResponse(apiRes);
+                const result: MappedPackage = PackageSchema.parse(apiRes.data);
+                return result;
             } catch (error) {
-                return handleNotFound(error);
+                handleApiError(error, `findById(${id})`);
+
+                if (error instanceof ApiError && error.status === 404) {
+                    return null;
+                }
+                throw error;
             }
         },
 
         async getHistory(id: string): Promise<Package[]> {
-            const apiRes = await packageApiClient.getPackageHistory(id);
-            return mapPackageApiList(apiRes);
+            try {
+                const apiRes = await packageApiClient.getPackageHistory(id);
+                const result: MappedPackageList = PackageListSchema.parse(apiRes);
+                return result;
+            } catch (error) {
+                handleApiError(error, `getHistory(${id})`);
+                throw error;
+            }
         },
 
         async create(data: Package): Promise<Package> {
-            const apiRes = await packageApiClient.createPackage(data);
-            return mapPackageApiResponse(apiRes);
+            try {
+                const apiRes = await packageApiClient.createPackage(data);
+                const result: MappedPackage = PackageSchema.parse(apiRes.data);
+                return result;
+            } catch (error) {
+                handleApiError(error, 'create');
+                throw error;
+            }
         },
 
         async updateStatus(packageId: string, status: number): Promise<Package> {
-            const apiRes = await packageApiClient.updatePackageStatus(packageId, status);
-            return mapPackageApiResponse(apiRes);
+            try {
+                const apiRes = await packageApiClient.updatePackageStatus(packageId, status);
+                const result: MappedPackage = PackageSchema.parse(apiRes.data);
+                return result;
+            } catch (error) {
+                handleApiError(error, `updateStatus(${packageId})`);
+                throw error;
+            }
         },
     };
 };

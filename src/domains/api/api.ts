@@ -10,6 +10,16 @@ export interface ApiResponse<T> {
   errorMessage: string | null;
 }
 
+export interface ApiErrorResponse {
+  status: "error";
+  message: string;
+  code: string;
+  statusCode?: number;
+  errors?: string[];
+  context: string;
+  timestamp: string;
+}
+
 export type PackageApiResponse = ApiResponse<PackageResponse>;
 export type PackageListApiResponse = ApiResponse<PackageResponse[]>;
 export type RecipientApiResponse = ApiResponse<RecipientData>;

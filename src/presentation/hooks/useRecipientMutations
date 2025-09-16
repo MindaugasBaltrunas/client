@@ -1,0 +1,75 @@
+import { useMutation, useQueryClient, UseMutationOptions } from '@tanstack/react-query';
+import { ApiClientConfig } from '../../config/type';
+import { ApiError } from '../../shared/errors/ApiError';
+import { createApiRecipientRepository, RecipientRepository } from '../../infrastructure/repositories/ApiRecipientRepository';
+import { createRecipientApiClient } from '../../infrastructure/api/clients/RecipientApiClient';
+import { RecipientData } from '../../domains/recipient/recipient';
+
+export type MutationConfig<TData = unknown, TError = ApiError, TVariables = unknown> = UseMutationOptions<
+    TData,
+    TError,
+    TVariables
+> & {
+    showSuccessToast?: boolean;
+    showErrorToast?: boolean;
+    successMessage?: string;
+    errorMessage?: string;
+    toastHandler?: {
+        success?: (msg: string) => void;
+        error?: (msg: string) => void;
+    };
+};
+
+export const useRecipientMutations = (
+    config: ApiClientConfig,
+    defaultToastHandler?: {
+        success?: (msg: string) => void;
+        error?: (msg: string) => void;
+    }
+) => {
+    const queryClient = useQueryClient();
+    const apiClient = createRecipientApiClient(config);
+    const repository: RecipientRepository = createApiRecipientRepository(apiClient);
+
+    const useCreateRecipient = (options?: MutationConfig<RecipientData, ApiError, RecipientData>) =>
+        useMutation<RecipientData, ApiError, RecipientData>({
+            mutationFn: (data: RecipientData) => repository.create(data),
+            onSuccess: (recipient, variables, context) => {
+                // Invalidate recipients list to refresh the data
+                queryClient.invalidateQueries({ queryKey: ['recipients', 'list'] });
+                
+                // Cache the newly created recipient
+                queryClient.setQueryData(['recipients', 'detail', recipient.id], recipient);
+                
+                // Show success toast if enabled
+                if (options?.showSuccessToast ?? true) {
+                    const message = options?.successMessage ??
+                        `Recipient ${recipient.name || recipient.id} created successfully!`;
+                    const toastHandler = options?.toastHandler?.success ?? defaultToastHandler?.success;
+                    toastHandler?.(message);
+                }
+                
+                // Call custom onSuccess handler if provided
+                options?.onSuccess?.(recipient, variables, context);
+            },
+            onError: (error, variables, context) => {
+                // Show error toast if enabled
+                if (options?.showErrorToast ?? true) {
+                    const message = options?.errorMessage ??
+                        `Failed to create recipient: ${error.message ?? 'Unknown error'}`;
+                    const toastHandler = options?.toastHandler?.error ?? defaultToastHandler?.error;
+                    toastHandler?.(message);
+                }
+                
+                // Call custom onError handler if provided
+                options?.onError?.(error, variables, context);
+            },
+            ...options,
+        });
+        
+    return {
+        useCreateRecipient
+    };
+};
+
+export default useRecipientMutations;
