@@ -4,12 +4,13 @@ import { createSenderApiClient } from '../api/clients/SenderApiClient';
 import { SenderData } from '../../domains/sender/sender';
 import { senderQueryKeys } from './utils/senderQueryKeys';
 import { MappedSender, SenderSchema } from '../mappers/mapApiResponse';
+import { ApiError } from '../../shared/errors/ApiError';
 
 export const createApiSenderRepository = (senderApiClient: ReturnType<typeof createSenderApiClient>) => {
     return {
-        useCreateSender: (options?: UseMutationOptions<SenderData, Error, SenderData>) => {
+        useCreateSender: (options?: UseMutationOptions<SenderData, ApiError, SenderData>) => {
             const queryClient = useQueryClient();
-            return useMutation<SenderData, Error, SenderData>({
+            return useMutation<SenderData, ApiError, SenderData>({
                 mutationFn: async (data: SenderData) => {
                     try {
                         const apiRes = await senderApiClient.createSender(data);
@@ -26,17 +27,7 @@ export const createApiSenderRepository = (senderApiClient: ReturnType<typeof cre
                 },
                 ...options,
             });
-        },
-        async create(data: SenderData): Promise<SenderData> {
-            try {
-                const apiRes = await senderApiClient.createSender(data);
-                const result: MappedSender = SenderSchema.parse(apiRes.data);
-                return result;
-            } catch (error) {
-                handleApiError(error, 'create');
-                throw error;
-            }
-        },
+        }
     };
 };
 

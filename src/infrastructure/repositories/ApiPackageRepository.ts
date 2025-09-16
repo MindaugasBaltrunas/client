@@ -7,8 +7,6 @@ import { ApiError } from '../../shared/errors/ApiError';
 import { parsePackages } from './utils/parseData';
 import { MappedPackage, MappedPackageList, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
 
-
-
 export const createApiPackageRepository = (packageApiClient: ReturnType<typeof createPackageApiClient>) => {
     return {
         usePackages: (options?: UseQueryOptions<Package[]>) =>
@@ -75,8 +73,8 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                         const result: MappedPackage = PackageSchema.parse(apiRes.data);
                         return result;
                     } catch (error) {
-                        handleApiError(error, 'createPackage');
-                        throw error;
+                        const apiError = handleApiError(error, 'createPackage');
+                        throw apiError;
                     }
                 },
                 onSuccess: (pkg) => {
@@ -107,68 +105,7 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                 },
                 ...options,
             });
-        },
-
-
-        async getAll(): Promise<Package[]> {
-            try {
-                const apiRes = await packageApiClient.getPackages();
-                const packageResponse = parsePackages(apiRes);
-                const result: MappedPackageList = PackageListSchema.parse(packageResponse);
-                return result;
-            } catch (error) {
-                handleApiError(error, 'getAll');
-                throw error;
-            }
-        },
-
-        async findById(id: string): Promise<Package | null> {
-            try {
-                const apiRes = await packageApiClient.getPackage(id);
-                const result: MappedPackage = PackageSchema.parse(apiRes.data);
-                return result;
-            } catch (error) {
-                handleApiError(error, `findById(${id})`);
-
-                if (error instanceof ApiError && error.status === 404) {
-                    return null;
-                }
-                throw error;
-            }
-        },
-
-        async getHistory(id: string): Promise<Package[]> {
-            try {
-                const apiRes = await packageApiClient.getPackageHistory(id);
-                const result: MappedPackageList = PackageListSchema.parse(apiRes);
-                return result;
-            } catch (error) {
-                handleApiError(error, `getHistory(${id})`);
-                throw error;
-            }
-        },
-
-        async create(data: Package): Promise<Package> {
-            try {
-                const apiRes = await packageApiClient.createPackage(data);
-                const result: MappedPackage = PackageSchema.parse(apiRes.data);
-                return result;
-            } catch (error) {
-                handleApiError(error, 'create');
-                throw error;
-            }
-        },
-
-        async updateStatus(packageId: string, status: number): Promise<Package> {
-            try {
-                const apiRes = await packageApiClient.updatePackageStatus(packageId, status);
-                const result: MappedPackage = PackageSchema.parse(apiRes.data);
-                return result;
-            } catch (error) {
-                handleApiError(error, `updateStatus(${packageId})`);
-                throw error;
-            }
-        },
+        }
     };
 };
 
