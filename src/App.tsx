@@ -11,9 +11,7 @@ function App() {
     setIsModalOpen(!isModalOpen);
   };
 
-  return (
-     <AppRoutes />
-  );
+  return <AppRoutes />;
 }
 
 export default App;

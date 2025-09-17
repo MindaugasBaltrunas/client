@@ -3,9 +3,9 @@ import { createPackageApiClient } from '../api/clients/PackageApiClient';
 import { Package } from '../../domains/package/package';
 import { packageQueryKeys } from './utils/packageQueryKeys';
 import { handleApiError } from '../api/errors/ApiErrorHandler';
-import { ApiError } from '../../shared/errors/ApiError';
 import { parsePackages } from './utils/parseData';
 import { MappedPackage, MappedPackageList, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
+import { ApiErrorResponse } from '../../domains/api/api';
 
 export const createApiPackageRepository = (packageApiClient: ReturnType<typeof createPackageApiClient>) => {
     return {
@@ -30,12 +30,7 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                         const result: MappedPackage = PackageSchema.parse(apiRes);
                         return result;
                     } catch (error) {
-                        handleApiError(error, `getPackage(${id})`);
-
-                        if (error instanceof ApiError && error.status === 404) {
-                            return null;
-                        }
-                        throw error;
+                        throw handleApiError(error, `getPackage(${id})`);
                     }
                 },
                 enabled: !!id,
@@ -52,29 +47,23 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                         const result: MappedPackageList = PackageListSchema.parse(packageResponse);
                         return result;
                     } catch (error) {
-                        handleApiError(error, `getPackageHistory(${id})`);
-
-                        if (error instanceof ApiError && error.status === 404) {
-                            return null;
-                        }
-                        throw error;
+                        throw handleApiError(error, `getPackageHistory(${id})`);
                     }
                 },
                 enabled: !!id,
                 ...options,
             }),
 
-        useCreatePackage: (options?: UseMutationOptions<Package, Error, Package>) => {
+        useCreatePackage: (options?: UseMutationOptions<Package, ApiErrorResponse, Package>) => {
             const queryClient = useQueryClient();
-            return useMutation<Package, Error, Package>({
+            return useMutation<Package, ApiErrorResponse, Package>({
                 mutationFn: async (data: Package) => {
                     try {
                         const apiRes = await packageApiClient.createPackage(data);
                         const result: MappedPackage = PackageSchema.parse(apiRes.data);
                         return result;
                     } catch (error) {
-                        const apiError = handleApiError(error, 'createPackage');
-                        throw apiError;
+                        throw handleApiError(error, 'createPackage');
                     }
                 },
                 onSuccess: (pkg) => {
@@ -85,17 +74,16 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
             });
         },
 
-        useUpdatePackageStatus: (options?: UseMutationOptions<Package, Error, { packageId: string; status: number }>) => {
+        useUpdatePackageStatus: (options?: UseMutationOptions<Package, ApiErrorResponse, { packageId: string; status: number }>) => {
             const queryClient = useQueryClient();
-            return useMutation<Package, Error, { packageId: string; status: number }>({
+            return useMutation<Package, ApiErrorResponse, { packageId: string; status: number }>({
                 mutationFn: async ({ packageId, status }) => {
                     try {
                         const apiRes = await packageApiClient.updatePackageStatus(packageId, status);
                         const result: MappedPackage = PackageSchema.parse(apiRes.data);
                         return result;
                     } catch (error) {
-                        handleApiError(error, `updatePackageStatus(${packageId})`);
-                        throw error;
+                        throw handleApiError(error, `updatePackageStatus(${packageId})`);
                     }
                 },
                 onSuccess: (pkg) => {

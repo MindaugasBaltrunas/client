@@ -1,7 +1,7 @@
 import { UseQueryOptions } from '@tanstack/react-query';
 import { Package } from '../../domains/package/package';
 import { PackageRepository } from '../../infrastructure/repositories/ApiPackageRepository';
-import { ApiError } from '../../shared/errors/ApiError';
+import { ApiErrorResponse } from '../../domains/api/api';
 import { PackageStatus } from '../../domains/packageStatus/packageStatus';
 import { MutationConfig } from '../../config/mutationConfig';
 
@@ -20,27 +20,26 @@ const statusNameMap: Record<number, string> = {
 
 const getStatusName = (status: number): string => statusNameMap[status] ?? 'Unknown';
 
-const createToastHandlers = (
-    defaultHandler?: ToastHandler,
-    options?: {
-        showSuccessToast?: boolean;
-        showErrorToast?: boolean;
-        successMessage?: string;
-        errorMessage?: string;
-        toastHandler?: ToastHandler;
-    }
+const createMutationHandlers = <TData, TVariables>(
+    defaultToastHandler?: ToastHandler,
+    options?: MutationConfig<TData, ApiErrorResponse, TVariables>
 ) => ({
-    showSuccess: (defaultMessage: string) => {
+    handleSuccess: (data: TData, variables: TVariables, context: unknown, defaultMessage: string) => {
         if (options?.showSuccessToast ?? true) {
             const message = options?.successMessage ?? defaultMessage;
-            options?.toastHandler?.success?.(message) ?? defaultHandler?.success?.(message);
+            const toastHandler = options?.toastHandler?.success ?? defaultToastHandler?.success;
+            toastHandler?.(message);
         }
+        options?.onSuccess?.(data, variables, context);
     },
-    showError: (defaultMessage: string, error?: any) => {
+    
+    handleError: (error: ApiErrorResponse, variables: TVariables, context: unknown, defaultMessage: string) => {
         if (options?.showErrorToast ?? true) {
-            const message = options?.errorMessage ?? `${defaultMessage}: ${error?.message ?? error}`;
-            options?.toastHandler?.error?.(message) ?? defaultHandler?.error?.(message);
+            const message = options?.errorMessage ?? `${defaultMessage}: ${error.message ?? 'Unknown error'}`;
+            const toastHandler = options?.toastHandler?.error ?? defaultToastHandler?.error;
+            toastHandler?.(message);
         }
+        options?.onError?.(error, variables, context);
     },
 });
 
@@ -57,62 +56,55 @@ export const usePackageMutations = (
     const usePackageHistory = (id: string, options?: UseQueryOptions<Package[] | null>) =>
         repository.usePackageHistory(id, options);
 
-    const useCreatePackage = (options?: MutationConfig<Package, ApiError, Package>) => {
-        const toastHandlers = createToastHandlers(defaultToastHandler, options);
+    const useCreatePackage = (options?: MutationConfig<Package, ApiErrorResponse, Package>) => {
+        const handlers = createMutationHandlers(defaultToastHandler, options);
 
         return repository.useCreatePackage({
             onSuccess: (pkg, variables, context) => {
-                toastHandlers.showSuccess(`Package ${pkg.trackingNumber} created successfully!`);
-                options?.onSuccess?.(pkg, variables, context);
+                handlers.handleSuccess(
+                    pkg, 
+                    variables, 
+                    context, 
+                    `Package ${pkg.trackingNumber} created successfully!`
+                );
             },
-            onError: (error: Error, variables, context) => {
-                const apiError = error as ApiError;
-                if (options?.showErrorToast ?? true) {
-                    const message = options?.errorMessage ?? `Failed to create recipient: ${apiError.message ?? 'Unknown error'}`;
-                    const toastHandler = options?.toastHandler?.error ?? defaultToastHandler?.error;
-                    toastHandler?.(message);
-                }
-
-                options?.onError?.(apiError, variables, context);
+            onError: (error: ApiErrorResponse, variables, context) => {
+                handlers.handleError(error, variables, context, 'Failed to create package');
             },
+            ...options,
         });
     };
 
     const useUpdatePackageStatus = (
-        options?: MutationConfig<Package, ApiError, { packageId: string; status: number }>
+        options?: MutationConfig<Package, ApiErrorResponse, { packageId: string; status: number }>
     ) => {
-        const toastHandlers = createToastHandlers(defaultToastHandler, options);
+        const handlers = createMutationHandlers(defaultToastHandler, options);
 
         return repository.useUpdatePackageStatus({
             onSuccess: (pkg, variables, context) => {
                 const statusName = getStatusName(variables.status);
-                toastHandlers.showSuccess(`Package status updated to ${statusName}`);
-                options?.onSuccess?.(pkg, variables, context);
+                handlers.handleSuccess(
+                    pkg, 
+                    variables, 
+                    context, 
+                    `Package status updated to ${statusName}`
+                );
             },
-            onError: (error: Error, variables, context) => {
-                const apiError = error as ApiError;
-                if (options?.showErrorToast ?? true) {
-                    const message = options?.errorMessage ?? `Failed to create recipient: ${apiError.message ?? 'Unknown error'}`;
-                    const toastHandler = options?.toastHandler?.error ?? defaultToastHandler?.error;
-                    toastHandler?.(message);
-                }
-
-                options?.onError?.(apiError, variables, context);
+            onError: (error: ApiErrorResponse, variables, context) => {
+                handlers.handleError(error, variables, context, 'Failed to update package status');
             },
+            ...options,
         });
     };
 
     return {
-        // Query hooks
         usePackages,
         usePackage,
         usePackageHistory,
 
-        // Mutation hooks
         useCreatePackage,
         useUpdatePackageStatus,
 
-        // Utilities
         PackageStatus,
     };
 };

@@ -4,6 +4,7 @@ import { createApiRecipientRepository, RecipientRepository } from '../../infrast
 import { createRecipientApiClient } from '../../infrastructure/api/clients/RecipientApiClient';
 import { RecipientData } from '../../domains/recipient/recipient';
 import { MutationConfig } from '../../config/mutationConfig'
+import { ApiErrorResponse } from '../../domains/api/api';
 
 const useRecipientMutations = (
     config: ApiClientConfig,
@@ -15,7 +16,7 @@ const useRecipientMutations = (
     const apiClient = createRecipientApiClient(config);
     const repository: RecipientRepository = createApiRecipientRepository(apiClient);
 
-    const useCreateRecipient = (options?: MutationConfig<RecipientData, ApiError, RecipientData>) => {
+    const useCreateRecipient = (options?: MutationConfig<RecipientData, ApiErrorResponse, RecipientData>) => {
         return repository.useCreateRecipient({
             onSuccess: (recipient, variables, context) => {
                 if (options?.showSuccessToast ?? true) {
@@ -26,15 +27,14 @@ const useRecipientMutations = (
                 }
                 options?.onSuccess?.(recipient, variables, context);
             },
-            onError: (error: Error, variables, context) => {
-                const apiError = error as ApiError;
+            onError: (error: ApiErrorResponse, variables, context) => {
                 if (options?.showErrorToast ?? true) {
-                    const message = options?.errorMessage ?? `Failed to create recipient: ${apiError.message ?? 'Unknown error'}`;
+                    const message = options?.errorMessage ?? `Failed to create recipient: ${error.message ?? 'Unknown error'}`;
                     const toastHandler = options?.toastHandler?.error ?? defaultToastHandler?.error;
                     toastHandler?.(message);
                 }
 
-                options?.onError?.(apiError, variables, context);
+                options?.onError?.(error, variables, context);
             },
             ...options,
         });
