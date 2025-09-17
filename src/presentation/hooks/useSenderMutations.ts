@@ -1,19 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiClientConfig } from '../../config/type';
-import { ApiError } from '../../shared/errors/ApiError';
 import { SenderData } from '../../domains/sender/sender';
 import { createApiSenderRepository, SenderRepository } from '../../infrastructure/repositories/ApiSenderRepository';
 import { createSenderApiClient } from '../../infrastructure/api/clients/SenderApiClient';
 import { MutationConfig } from '../../config/mutationConfig';
 import { ApiErrorResponse } from '../../domains/api/api';
+import { ToastHandler } from './type';
 
 
 const useSenderMutations = (
     config: ApiClientConfig,
-    defaultToastHandler?: {
-        success?: (msg: string) => void;
-        error?: (msg: string) => void;
-    }
+    defaultToastHandler?: ToastHandler
 ) => {
     const apiClient = createSenderApiClient(config);
     const repository: SenderRepository = createApiSenderRepository(apiClient);

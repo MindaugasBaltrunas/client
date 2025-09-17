@@ -1,17 +1,14 @@
 import { ApiClientConfig } from '../../config/type';
-import { ApiError } from '../../shared/errors/ApiError';
 import { createApiRecipientRepository, RecipientRepository } from '../../infrastructure/repositories/ApiRecipientRepository';
 import { createRecipientApiClient } from '../../infrastructure/api/clients/RecipientApiClient';
 import { RecipientData } from '../../domains/recipient/recipient';
 import { MutationConfig } from '../../config/mutationConfig'
 import { ApiErrorResponse } from '../../domains/api/api';
+import { ToastHandler } from './type';
 
 const useRecipientMutations = (
     config: ApiClientConfig,
-    defaultToastHandler?: {
-        success?: (msg: string) => void;
-        error?: (msg: string) => void;
-    }
+    defaultToastHandler?: ToastHandler
 ) => {
     const apiClient = createRecipientApiClient(config);
     const repository: RecipientRepository = createApiRecipientRepository(apiClient);

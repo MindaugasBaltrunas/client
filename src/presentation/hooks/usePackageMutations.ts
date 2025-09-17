@@ -1,14 +1,13 @@
 import { UseQueryOptions } from '@tanstack/react-query';
 import { Package } from '../../domains/package/package';
-import { PackageRepository } from '../../infrastructure/repositories/ApiPackageRepository';
+import { createApiPackageRepository } from '../../infrastructure/repositories/ApiPackageRepository';
 import { ApiErrorResponse } from '../../domains/api/api';
 import { PackageStatus } from '../../domains/packageStatus/packageStatus';
 import { MutationConfig } from '../../config/mutationConfig';
-
-export type ToastHandler = {
-    success?: (msg: string) => void;
-    error?: (msg: string) => void;
-};
+import { createPackageApiClient } from '../../infrastructure/api/clients/PackageApiClient';
+import { getDefaultApiConfig } from '../../config/api';
+import { ApiClientConfig } from '../../config/type';
+import { ToastHandler } from './type';
 
 const statusNameMap: Record<number, string> = {
     [PackageStatus.Created]: 'Created',
@@ -32,7 +31,7 @@ const createMutationHandlers = <TData, TVariables>(
         }
         options?.onSuccess?.(data, variables, context);
     },
-    
+
     handleError: (error: ApiErrorResponse, variables: TVariables, context: unknown, defaultMessage: string) => {
         if (options?.showErrorToast ?? true) {
             const message = options?.errorMessage ?? `${defaultMessage}: ${error.message ?? 'Unknown error'}`;
@@ -44,9 +43,13 @@ const createMutationHandlers = <TData, TVariables>(
 });
 
 export const usePackageMutations = (
-    repository: PackageRepository,
-    defaultToastHandler?: ToastHandler
+    defaultToastHandler?: ToastHandler,
+    config?: ApiClientConfig
 ) => {
+    const apiConfig = config ? config : getDefaultApiConfig()
+    const packageApiClient = createPackageApiClient(apiConfig);
+    const repository = createApiPackageRepository(packageApiClient);
+
     const usePackages = (options?: UseQueryOptions<Package[]>) =>
         repository.usePackages(options);
 
@@ -62,9 +65,9 @@ export const usePackageMutations = (
         return repository.useCreatePackage({
             onSuccess: (pkg, variables, context) => {
                 handlers.handleSuccess(
-                    pkg, 
-                    variables, 
-                    context, 
+                    pkg,
+                    variables,
+                    context,
                     `Package ${pkg.trackingNumber} created successfully!`
                 );
             },
@@ -84,9 +87,9 @@ export const usePackageMutations = (
             onSuccess: (pkg, variables, context) => {
                 const statusName = getStatusName(variables.status);
                 handlers.handleSuccess(
-                    pkg, 
-                    variables, 
-                    context, 
+                    pkg,
+                    variables,
+                    context,
                     `Package status updated to ${statusName}`
                 );
             },
