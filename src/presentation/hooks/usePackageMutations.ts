@@ -8,6 +8,8 @@ import { createPackageApiClient } from '../../infrastructure/api/clients/Package
 import { getDefaultApiConfig } from '../../config/api';
 import { ApiClientConfig } from '../../config/type';
 import { ToastHandler } from './type';
+import { CreatePackage } from '../../domains/package/createPackage';
+import { MappedPackage } from '../../infrastructure/mappers/mapApiResponse';
 
 const statusNameMap: Record<number, string> = {
     [PackageStatus.Created]: 'Created',
@@ -59,7 +61,7 @@ export const usePackageMutations = (
     const usePackageHistory = (id: string, options?: UseQueryOptions<Package[] | null>) =>
         repository.usePackageHistory(id, options);
 
-    const useCreatePackage = (options?: MutationConfig<Package, ApiErrorResponse, Package>) => {
+    const useCreatePackage = (options?: MutationConfig<MappedPackage, ApiErrorResponse, CreatePackage>) => {
         const handlers = createMutationHandlers(defaultToastHandler, options);
 
         return repository.useCreatePackage({

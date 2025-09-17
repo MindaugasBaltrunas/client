@@ -9,10 +9,10 @@ const Header = ({ className = "" }: HeaderProps) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className={`bg-sky-950 bg-white text-gray-900 border-gray-200 shadow-sm border-b ${className}`}>
+    <header className={`bg-sky-950 bg-white text-gray-900 border-gray-200 shadow-sm border-b dark:text-white dark:bg-gray-800 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <h1 className="text-xl font-semibold">My App</h1>
+          <h1 className="text-xl font-semibold">Package Tracking App</h1>
          
           <button
             onClick={toggleTheme}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useLayoutEffect } from "react";
+import React, {createContext, useContext, useState, useLayoutEffect, ReactNode} from "react";
 
 type Theme = "light" | "dark";
 
@@ -22,7 +22,7 @@ const getInitialTheme = (): Theme => {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
-export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
 
   useLayoutEffect(() => {

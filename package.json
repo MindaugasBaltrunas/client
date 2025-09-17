@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@tanstack/react-query": "^5.87.4",
+    "@tanstack/react-query-devtools": "^5.89.0",
     "@tanstack/react-table": "^8.21.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
@@ -14,14 +15,17 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@types/react-router-dom": "^5.3.3",
+    "formik": "^2.4.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.9.1",
     "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
+    "uuid": "^13.0.0",
     "web-vitals": "^2.1.4",
     "xss-safe-display": "^0.1.0",
+    "yup": "^1.7.0",
     "zod": "^4.1.8"
   },
   "scripts": {

@@ -29,7 +29,7 @@ const Footer: FC<FooterProps> = ({
     { __html: "Building amazing experiences with modern web technologies. We create solutions that make a difference." };
 
   return (
-    <footer className={`bg-gray-800 text-white ${className}`}>
+    <footer className={`bg-gray-800 text-white border-gray-200 border-t  ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {showLinks && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
@@ -72,27 +72,7 @@ const Footer: FC<FooterProps> = ({
               © {currentYear} <span dangerouslySetInnerHTML={{ __html: safeCompanyName }} />. All rights reserved.
             </p>
             
-            {/* Social links with URL sanitization */}
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              {socialLinks.map((social, index) => {
-                const safeUrl = safeDisplay.url(social.url);
-                const safeLabel = safeDisplay.text(social.label);
-                
-                return safeUrl ? (
-                  <a 
-                    key={index}
-                    href={safeUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-gray-300 hover:text-white transition-colors"
-                    aria-label={safeLabel}
-                  >
-                    <span dangerouslySetInnerHTML={{ __html: safeLabel }} />
-                  </a>
-                ) : null;
-              })}             
- 
-            </div>
+
           </div>
         </div>
       </div>

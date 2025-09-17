@@ -14,7 +14,7 @@ export const createApiSenderRepository = (senderApiClient: ReturnType<typeof cre
                 mutationFn: async (data: SenderData) => {
                     try {
                         const apiRes = await senderApiClient.createSender(data);
-                        const result: MappedSender = SenderSchema.parse(apiRes.data)
+                        const result: MappedSender = SenderSchema.parse(apiRes)
                         return result;
                     } catch (error) {
                         throw handleApiError(error, 'createSender');

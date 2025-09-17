@@ -5,13 +5,15 @@ import { createSenderApiClient } from '../../infrastructure/api/clients/SenderAp
 import { MutationConfig } from '../../config/mutationConfig';
 import { ApiErrorResponse } from '../../domains/api/api';
 import { ToastHandler } from './type';
+import { getDefaultApiConfig } from '../../config/api';
 
 
 const useSenderMutations = (
-    config: ApiClientConfig,
+    config?: ApiClientConfig,
     defaultToastHandler?: ToastHandler
 ) => {
-    const apiClient = createSenderApiClient(config);
+    const aipConfig = config ? config : getDefaultApiConfig();
+    const apiClient = createSenderApiClient(aipConfig);
     const repository: SenderRepository = createApiSenderRepository(apiClient);
 
     const useCreateSender = (options?: MutationConfig<SenderData, ApiErrorResponse, SenderData>) => {

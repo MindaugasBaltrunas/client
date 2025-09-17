@@ -5,12 +5,14 @@ import { RecipientData } from '../../domains/recipient/recipient';
 import { MutationConfig } from '../../config/mutationConfig'
 import { ApiErrorResponse } from '../../domains/api/api';
 import { ToastHandler } from './type';
+import { getDefaultApiConfig } from '../../config/api';
 
 const useRecipientMutations = (
-    config: ApiClientConfig,
+    config?: ApiClientConfig,
     defaultToastHandler?: ToastHandler
 ) => {
-    const apiClient = createRecipientApiClient(config);
+    const aipConfig = config ? config : getDefaultApiConfig();
+    const apiClient = createRecipientApiClient(aipConfig);
     const repository: RecipientRepository = createApiRecipientRepository(apiClient);
 
     const useCreateRecipient = (options?: MutationConfig<RecipientData, ApiErrorResponse, RecipientData>) => {

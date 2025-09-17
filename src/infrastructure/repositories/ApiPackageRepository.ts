@@ -6,6 +6,7 @@ import { handleApiError } from '../api/errors/ApiErrorHandler';
 import { parsePackages } from './utils/parseData';
 import { MappedPackage, MappedPackageList, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
 import { ApiErrorResponse } from '../../domains/api/api';
+import { CreatePackage } from '../../domains/package/createPackage';
 
 export const createApiPackageRepository = (packageApiClient: ReturnType<typeof createPackageApiClient>) => {
     return {
@@ -15,7 +16,7 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                 queryFn: async () => {
                     const apiRes = await packageApiClient.getPackages();
                     const packageResponse = parsePackages(apiRes);
-                    const result: MappedPackageList = PackageListSchema.parse(packageResponse);
+                    const result: MappedPackageList = PackageListSchema.parse(apiRes);
                     return result;
                 },
                 ...options,
@@ -54,13 +55,13 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                 ...options,
             }),
 
-        useCreatePackage: (options?: UseMutationOptions<Package, ApiErrorResponse, Package>) => {
+        useCreatePackage: (options?: UseMutationOptions<MappedPackage, ApiErrorResponse, CreatePackage>) => {
             const queryClient = useQueryClient();
-            return useMutation<Package, ApiErrorResponse, Package>({
-                mutationFn: async (data: Package) => {
+            return useMutation<MappedPackage, ApiErrorResponse, CreatePackage>({
+                mutationFn: async (data: CreatePackage) => {
                     try {
                         const apiRes = await packageApiClient.createPackage(data);
-                        const result: MappedPackage = PackageSchema.parse(apiRes.data);
+                        const result: MappedPackage = PackageSchema.parse(apiRes);
                         return result;
                     } catch (error) {
                         throw handleApiError(error, 'createPackage');
@@ -76,11 +77,11 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
 
         useUpdatePackageStatus: (options?: UseMutationOptions<Package, ApiErrorResponse, { packageId: string; status: number }>) => {
             const queryClient = useQueryClient();
-            return useMutation<Package, ApiErrorResponse, { packageId: string; status: number }>({
+            return useMutation<MappedPackage, ApiErrorResponse, { packageId: string; status: number }>({
                 mutationFn: async ({ packageId, status }) => {
                     try {
                         const apiRes = await packageApiClient.updatePackageStatus(packageId, status);
-                        const result: MappedPackage = PackageSchema.parse(apiRes.data);
+                        const result: MappedPackage = PackageSchema.parse(apiRes);
                         return result;
                     } catch (error) {
                         throw handleApiError(error, `updatePackageStatus(${packageId})`);
