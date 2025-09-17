@@ -16,16 +16,16 @@ const useSenderMutations = (
 
     const useCreateSender = (options?: MutationConfig<SenderData, ApiErrorResponse, SenderData>) => {
         return repository.useCreateSender({
-            onSuccess: (recipient, variables, context) => {
+            onSuccess: (recipient, variables, onMutateResult, context) => {
                 if (options?.showSuccessToast ?? true) {
                     const message = options?.successMessage ??
                         `Recipient ${recipient.name || recipient.id} created successfully!`;
                     const toastHandler = options?.toastHandler?.success ?? defaultToastHandler?.success;
                     toastHandler?.(message);
                 }
-                options?.onSuccess?.(recipient, variables, context);
+                options?.onSuccess?.(recipient, variables, onMutateResult, context);
             },
-            onError: (error: ApiErrorResponse, variables, context) => {
+            onError: (error: ApiErrorResponse, variables, onMutateResult, context) => {
 
                 if (options?.showErrorToast ?? true) {
                     const message = options?.errorMessage ?? `Failed to create recipient: ${error.message ?? 'Unknown error'}`;
@@ -33,7 +33,7 @@ const useSenderMutations = (
                     toastHandler?.(message);
                 }
 
-                options?.onError?.(error, variables, context);
+                options?.onError?.(error, variables, onMutateResult, context);
             },
             ...options,
         });

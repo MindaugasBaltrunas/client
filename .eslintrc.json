@@ -9,7 +9,6 @@
     "react-app",
     "react-app/jest"
   ],
-  "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true
@@ -18,8 +17,7 @@
     "sourceType": "module"
   },
   "plugins": [
-    "react",
-    "@typescript-eslint"
+    "react"
   ],
   "rules": {
     "react/react-in-jsx-scope": "off",

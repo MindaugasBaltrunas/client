@@ -4,7 +4,7 @@ import { safeDisplay } from 'xss-safe-display';
 
 interface FooterProps {
   companyName?: string;
-  description?: string; // User-provided description
+  description?: string; 
   showLinks?: boolean;
   className?: string;
   socialLinks?: {
@@ -23,7 +23,6 @@ const Footer: FC<FooterProps> = ({
 }) => {
   const currentYear = new Date().getFullYear();
   
-  // Safely display user-provided content
   const safeCompanyName = safeDisplay.text(companyName);
   const safeDescription = description ? 
     safeDisplay.html(description, ['p', 'strong', 'em', 'br']) : 
@@ -91,8 +90,7 @@ const Footer: FC<FooterProps> = ({
                     <span dangerouslySetInnerHTML={{ __html: safeLabel }} />
                   </a>
                 ) : null;
-              })}
-              
+              })}             
  
             </div>
           </div>

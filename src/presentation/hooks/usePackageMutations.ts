@@ -1,4 +1,4 @@
-import { UseQueryOptions } from '@tanstack/react-query';
+import { MutationFunctionContext, UseQueryOptions } from '@tanstack/react-query';
 import { Package } from '../../domains/package/package';
 import { createApiPackageRepository } from '../../infrastructure/repositories/ApiPackageRepository';
 import { ApiErrorResponse } from '../../domains/api/api';
@@ -23,22 +23,22 @@ const createMutationHandlers = <TData, TVariables>(
     defaultToastHandler?: ToastHandler,
     options?: MutationConfig<TData, ApiErrorResponse, TVariables>
 ) => ({
-    handleSuccess: (data: TData, variables: TVariables, context: unknown, defaultMessage: string) => {
+    handleSuccess: (data: TData, variables: TVariables, onMutateResult: unknown, context: MutationFunctionContext, defaultMessage: string) => {
         if (options?.showSuccessToast ?? true) {
             const message = options?.successMessage ?? defaultMessage;
             const toastHandler = options?.toastHandler?.success ?? defaultToastHandler?.success;
             toastHandler?.(message);
         }
-        options?.onSuccess?.(data, variables, context);
+        options?.onSuccess?.(data, variables, onMutateResult, context);
     },
 
-    handleError: (error: ApiErrorResponse, variables: TVariables, context: unknown, defaultMessage: string) => {
+    handleError: (error: ApiErrorResponse, variables: TVariables, onMutateResult: unknown, context: MutationFunctionContext, defaultMessage: string) => {
         if (options?.showErrorToast ?? true) {
             const message = options?.errorMessage ?? `${defaultMessage}: ${error.message ?? 'Unknown error'}`;
             const toastHandler = options?.toastHandler?.error ?? defaultToastHandler?.error;
             toastHandler?.(message);
         }
-        options?.onError?.(error, variables, context);
+        options?.onError?.(error, variables, onMutateResult, context);
     },
 });
 
@@ -63,16 +63,17 @@ export const usePackageMutations = (
         const handlers = createMutationHandlers(defaultToastHandler, options);
 
         return repository.useCreatePackage({
-            onSuccess: (pkg, variables, context) => {
+            onSuccess: (pkg, variables, onMutateResult, context) => {
                 handlers.handleSuccess(
                     pkg,
                     variables,
+                    onMutateResult,
                     context,
                     `Package ${pkg.trackingNumber} created successfully!`
                 );
             },
-            onError: (error: ApiErrorResponse, variables, context) => {
-                handlers.handleError(error, variables, context, 'Failed to create package');
+            onError: (error: ApiErrorResponse, variables, onMutateResult, context) => {
+                handlers.handleError(error, variables, onMutateResult, context, 'Failed to create package');
             },
             ...options,
         });
@@ -84,17 +85,18 @@ export const usePackageMutations = (
         const handlers = createMutationHandlers(defaultToastHandler, options);
 
         return repository.useUpdatePackageStatus({
-            onSuccess: (pkg, variables, context) => {
+            onSuccess: (pkg, variables, onMutateResult, context) => {
                 const statusName = getStatusName(variables.status);
                 handlers.handleSuccess(
                     pkg,
                     variables,
+                    onMutateResult,
                     context,
                     `Package status updated to ${statusName}`
                 );
             },
-            onError: (error: ApiErrorResponse, variables, context) => {
-                handlers.handleError(error, variables, context, 'Failed to update package status');
+            onError: (error: ApiErrorResponse, variables, onMutateResult, context) => {
+                handlers.handleError(error, variables, onMutateResult, context, 'Failed to update package status');
             },
             ...options,
         });
