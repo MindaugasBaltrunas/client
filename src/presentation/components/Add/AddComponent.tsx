@@ -12,23 +12,24 @@ import usePackageMutations from "../../hooks/usePackageMutations";
 import { CreatePackage } from "../../../domains/package/createPackage";
 import { v4 as uuidv4 } from "uuid";
 
+
 interface UserIds {
   sender: string;
   recipient: string;
 }
 
 const AddComponent = () => {
+
   const [ids, setIds] = useState<UserIds>({ sender: "", recipient: "" });
-  
-  // Use useToggle consistently for all modals
+
   const senderModal = useToggle();
   const recipientModal = useToggle();
   const packageModal = useToggle();
-  
+
   const { useCreateSender } = useSenderMutations();
   const { useCreateRecipient } = useRecipientMutations();
   const { useCreatePackage } = usePackageMutations();
-  
+
   const createSenderMutation = useCreateSender();
   const createRecipientMutation = useCreateRecipient();
   const createPackageMutation = useCreatePackage();
@@ -43,6 +44,7 @@ const AddComponent = () => {
   };
 
   const handleRecipientSubmit = (values: Omit<RecipientData, "id">) => {
+
     createRecipientMutation.mutate(values as RecipientData, {
       onSuccess: (data) => {
         setIds((prevId) => ({ ...prevId, recipient: data.id }));
@@ -52,7 +54,6 @@ const AddComponent = () => {
   };
 
   const handlePackageSubmit = () => {
-    // Create package object inside the function to get current state
     const createPackage: CreatePackage = {
       trackingNumber: uuidv4(),
       senderId: ids.sender,
@@ -63,7 +64,6 @@ const AddComponent = () => {
       onSuccess: (data) => {
         console.log("Package created:", data);
         packageModal.close();
-        // Reset ids after successful package creation
         setIds({ sender: "", recipient: "" });
       },
       onError: (error) => {
@@ -76,7 +76,6 @@ const AddComponent = () => {
 
   return (
     <div className="space-y-4">
-      {/* Action Buttons */}
       <div className="flex gap-4">
         <button
           onClick={senderModal.open}
@@ -84,7 +83,7 @@ const AddComponent = () => {
         >
           Add Sender
         </button>
-        
+
         <button
           disabled={!ids.sender}
           onClick={recipientModal.open}
@@ -92,7 +91,7 @@ const AddComponent = () => {
         >
           Add Recipient
         </button>
-        
+
         <button
           disabled={!canCreatePackage}
           onClick={packageModal.open}
@@ -102,13 +101,11 @@ const AddComponent = () => {
         </button>
       </div>
 
-      {/* Status Display */}
       <div className="text-sm text-gray-600">
         <p>Sender: {ids.sender ? "✅ Selected" : "❌ Not selected"}</p>
         <p>Recipient: {ids.recipient ? "✅ Selected" : "❌ Not selected"}</p>
       </div>
 
-      {/* Modals */}
       <Modal
         isOpen={senderModal.isOpen}
         toggle={senderModal.toggle}
@@ -133,8 +130,12 @@ const AddComponent = () => {
         <div className="p-6">
           <h2 className="text-xl font-semibold mb-4">Create Package</h2>
           <div className="space-y-2 mb-4">
-            <p><strong>Sender ID:</strong> {ids.sender}</p>
-            <p><strong>Recipient ID:</strong> {ids.recipient}</p>
+            <p>
+              <strong>Sender ID:</strong> {ids.sender}
+            </p>
+            <p>
+              <strong>Recipient ID:</strong> {ids.recipient}
+            </p>
           </div>
           <div className="flex gap-2">
             <button
@@ -142,7 +143,9 @@ const AddComponent = () => {
               disabled={createPackageMutation.isPending}
               className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50"
             >
-              {createPackageMutation.isPending ? "Creating..." : "Create Package"}
+              {createPackageMutation.isPending
+                ? "Creating..."
+                : "Create Package"}
             </button>
             <button
               onClick={packageModal.close}

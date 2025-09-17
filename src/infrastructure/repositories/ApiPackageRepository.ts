@@ -1,24 +1,29 @@
-import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
+import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
 import { createPackageApiClient } from '../api/clients/PackageApiClient';
 import { Package } from '../../domains/package/package';
 import { packageQueryKeys } from './utils/packageQueryKeys';
 import { handleApiError } from '../api/errors/ApiErrorHandler';
-import { parsePackages } from './utils/parseData';
 import { MappedPackage, MappedPackageList, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
 import { ApiErrorResponse } from '../../domains/api/api';
 import { CreatePackage } from '../../domains/package/createPackage';
 
+/**
+ * Pure API Repository - Only handles API calls and basic React Query setup
+ * No cache management logic - that's handled by the business layer
+ */
 export const createApiPackageRepository = (packageApiClient: ReturnType<typeof createPackageApiClient>) => {
     return {
+        // ==================== QUERIES ====================
+        
         usePackages: (options?: UseQueryOptions<Package[]>) =>
             useQuery<Package[]>({
                 queryKey: packageQueryKeys.lists(),
                 queryFn: async () => {
                     const apiRes = await packageApiClient.getPackages();
-                    const packageResponse = parsePackages(apiRes);
-                    const result: MappedPackageList = PackageListSchema.parse(apiRes);
-                    return result;
+                    return PackageListSchema.parse(apiRes);
                 },
+                staleTime: 1000 * 60 * 5, // 5 minutes
+                gcTime: 1000 * 60 * 10, // 10 minutes
                 ...options,
             }),
 
@@ -28,13 +33,13 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                 queryFn: async () => {
                     try {
                         const apiRes = await packageApiClient.getPackage(id);
-                        const result: MappedPackage = PackageSchema.parse(apiRes);
-                        return result;
+                        return PackageSchema.parse(apiRes);
                     } catch (error) {
                         throw handleApiError(error, `getPackage(${id})`);
                     }
                 },
                 enabled: !!id,
+                staleTime: 1000 * 60 * 5,
                 ...options,
             }),
 
@@ -44,57 +49,44 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                 queryFn: async () => {
                     try {
                         const apiRes = await packageApiClient.getPackageHistory(id);
-                        const packageResponse = parsePackages(apiRes);
-                        const result: MappedPackageList = PackageListSchema.parse(packageResponse);
-                        return result;
+                        return PackageListSchema.parse(apiRes);
                     } catch (error) {
                         throw handleApiError(error, `getPackageHistory(${id})`);
                     }
                 },
                 enabled: !!id,
+                staleTime: 1000 * 60 * 2,
                 ...options,
             }),
 
-        useCreatePackage: (options?: UseMutationOptions<MappedPackage, ApiErrorResponse, CreatePackage>) => {
-            const queryClient = useQueryClient();
-            return useMutation<MappedPackage, ApiErrorResponse, CreatePackage>({
+        // ==================== MUTATIONS ====================
+        
+        useCreatePackageRaw: (options?: UseMutationOptions<MappedPackage, ApiErrorResponse, CreatePackage>) =>
+            useMutation<MappedPackage, ApiErrorResponse, CreatePackage>({
                 mutationFn: async (data: CreatePackage) => {
                     try {
                         const apiRes = await packageApiClient.createPackage(data);
-                        const result: MappedPackage = PackageSchema.parse(apiRes);
-                        return result;
+                        return PackageSchema.parse(apiRes);
                     } catch (error) {
                         throw handleApiError(error, 'createPackage');
                     }
                 },
-                onSuccess: (pkg) => {
-                    queryClient.invalidateQueries({ queryKey: packageQueryKeys.lists() });
-                    queryClient.setQueryData(packageQueryKeys.detail(pkg.id), pkg);
-                },
                 ...options,
-            });
-        },
+            }),
 
-        useUpdatePackageStatus: (options?: UseMutationOptions<Package, ApiErrorResponse, { packageId: string; status: number }>) => {
-            const queryClient = useQueryClient();
-            return useMutation<MappedPackage, ApiErrorResponse, { packageId: string; status: number }>({
+        useUpdatePackageStatusRaw: (options?: UseMutationOptions<MappedPackage, ApiErrorResponse, { packageId: string; status: number }>) =>
+            useMutation<MappedPackage, ApiErrorResponse, { packageId: string; status: number }>({
                 mutationFn: async ({ packageId, status }) => {
                     try {
                         const apiRes = await packageApiClient.updatePackageStatus(packageId, status);
-                        const result: MappedPackage = PackageSchema.parse(apiRes);
-                        return result;
+                        return PackageSchema.parse(apiRes);
                     } catch (error) {
                         throw handleApiError(error, `updatePackageStatus(${packageId})`);
                     }
                 },
-                onSuccess: (pkg) => {
-                    queryClient.setQueryData(packageQueryKeys.detail(pkg.id), pkg);
-                    queryClient.invalidateQueries({ queryKey: packageQueryKeys.lists() });
-                    queryClient.invalidateQueries({ queryKey: packageQueryKeys.history(pkg.id) });
-                },
                 ...options,
-            });
-        }
+            })
+
     };
 };
 
