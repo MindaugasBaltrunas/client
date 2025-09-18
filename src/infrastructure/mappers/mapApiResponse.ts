@@ -14,6 +14,12 @@ export const RecipientSchema = z.object({
     address: z.string()
 });
 
+export const PackageHistorySchema = z.object({
+    id: z.string(),
+    status: z.string(),
+    changedAt: z.string()
+})
+
 export const PackageSchema = z.object({
     id: z.string(),
     trackingNumber: z.string(),
@@ -28,7 +34,7 @@ export type MappedSender = z.infer<typeof SenderSchema>;
 export type MappedRecipient = z.infer<typeof RecipientSchema>;
 export type MappedPackage = z.infer<typeof PackageSchema>;
 export type MappedPackageList = z.infer<typeof PackageListSchema>;
+export type MappedPackageHistoryList = z.infer<typeof PackageHistoryListSchema>
 
 export const PackageListSchema = z.array(PackageSchema);
-
-
+export const PackageHistoryListSchema = z.array(PackageHistorySchema);

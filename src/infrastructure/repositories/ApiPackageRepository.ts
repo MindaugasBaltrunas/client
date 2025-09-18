@@ -3,9 +3,10 @@ import { createPackageApiClient } from '../api/clients/PackageApiClient';
 import { Package } from '../../domains/package/package';
 import { packageQueryKeys } from './utils/packageQueryKeys';
 import { handleApiError } from '../api/errors/ApiErrorHandler';
-import { MappedPackage, MappedPackageList, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
+import { MappedPackage, MappedPackageList, PackageHistoryListSchema, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
 import { ApiErrorResponse } from '../../domains/api/api';
 import { CreatePackage } from '../../domains/package/createPackage';
+import { PackageHistory } from '../../domains/package/packageHistory';
 
 /**
  * Pure API Repository - Only handles API calls and basic React Query setup
@@ -22,8 +23,6 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                     const apiRes = await packageApiClient.getPackages();
                     return PackageListSchema.parse(apiRes);
                 },
-                staleTime: 1000 * 60 * 5, // 5 minutes
-                gcTime: 1000 * 60 * 10, // 10 minutes
                 ...options,
             }),
 
@@ -39,24 +38,21 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                     }
                 },
                 enabled: !!id,
-                staleTime: 1000 * 60 * 5,
                 ...options,
             }),
 
-        usePackageHistory: (id: string, options?: UseQueryOptions<Package[] | null>) =>
-            useQuery<Package[] | null>({
+        usePackageHistory: (id: string) =>
+            useQuery<PackageHistory[] | null>({
                 queryKey: packageQueryKeys.history(id),
                 queryFn: async () => {
                     try {
                         const apiRes = await packageApiClient.getPackageHistory(id);
-                        return PackageListSchema.parse(apiRes);
+                        return PackageHistoryListSchema.parse(apiRes);
                     } catch (error) {
                         throw handleApiError(error, `getPackageHistory(${id})`);
                     }
                 },
-                enabled: !!id,
-                staleTime: 1000 * 60 * 2,
-                ...options,
+                enabled: !!id
             }),
 
         // ==================== MUTATIONS ====================

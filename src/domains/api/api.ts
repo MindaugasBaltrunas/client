@@ -1,3 +1,4 @@
+import { PackageHistory } from "../package/packageHistory";
 import { PackageResponse } from "../package/packageResponse";
 import { RecipientData } from "../recipient/recipient";
 import { SenderData } from "../sender/sender";
@@ -21,6 +22,7 @@ export interface ApiErrorResponse {
 }
 
 export type PackageApiResponse = ApiResponse<PackageResponse>;
+export type PackageListApiHistoryResponse = ApiResponse<PackageHistory>;
 export type PackageListApiResponse = ApiResponse<PackageResponse[]>;
 export type RecipientApiResponse = ApiResponse<RecipientData>;
 export type SenderApiResponse = ApiResponse<SenderData>;

@@ -1,63 +1,49 @@
 import { useEffect, useState } from "react";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
-import { SimpleTrackingTable } from "../components/Table/Table";
+import { TrackingTable } from "../components/Table/Table";
 import AddComponent from "../components/Add/AddComponent";
 import usePackageMutations from "../hooks/usePackageMutations";
-import { PackageStatus } from "../../domains/packageStatus/packageStatus";
 import { Package } from "../../domains/package/package";
+import { useToggle } from "../hooks/useToggle";
+import GetDeliveringHistory from "../components/Get/GetHistory";
 
-// Map numeric status codes to readable strings
-const statusNameMap: Record<number, string> = {
-  [PackageStatus.Created]: "Created",
-  [PackageStatus.Sent]: "In Transit",
-  [PackageStatus.Accepted]: "Delivered",
-  [PackageStatus.Cancelled]: "Canceled",
-  [PackageStatus.Returned]: "Returned",
+const statusNameMap: Record<string, string> = {
+  Created: "Created",
+  Sent: "In Transit",
+  Accepted: "Delivered",
+  Cancelled: "Canceled",
+  Returned: "Returned",
 };
 
-const getStatusName = (status: number | string): string =>
-  typeof status === "number" ? statusNameMap[status] ?? "Unknown" : status;
+const getStatusName = (status: string): string =>
+  statusNameMap[status] ?? status;
 
 const HomePage = () => {
   const { usePackages } = usePackageMutations();
   const getPackagesQuery = usePackages();
 
   const [packages, setPackages] = useState<
-    { trackingNumber: string; status: string }[]
+    { trackingNumber: string; status: string; id: string }[]
   >([]);
 
-  useEffect(() => {
-    console.log("Query data changed:", {
-      data: getPackagesQuery?.data,
-      length: getPackagesQuery?.data?.length,
-      isLoading: getPackagesQuery.isLoading,
-      isFetching: getPackagesQuery.isFetching,
-      dataUpdatedAt: getPackagesQuery.dataUpdatedAt,
-    });
+  const [selectedPackageId, setSelectedPackageId] = useState<string>("");
+  const historyModal = useToggle();
 
+  useEffect(() => {
     if (getPackagesQuery?.data) {
       const transformedData = getPackagesQuery.data.map((pkg: Package) => ({
-        trackingNumber:
-          pkg.trackingNumber === "[object Object]"
-            ? pkg.id
-            : pkg.trackingNumber,
+        trackingNumber: pkg.trackingNumber,
+        id: pkg.id,
         status: getStatusName(pkg.status),
       }));
       setPackages(transformedData);
     }
-  }, [
-    getPackagesQuery.data,
-    getPackagesQuery.data?.length,
-    getPackagesQuery.dataUpdatedAt,
-    getPackagesQuery.isFetching,
-    getPackagesQuery.isLoading,
-    getPackagesQuery.isSuccess,
-  ]);
+  }, [getPackagesQuery.data]);
 
-  const handleHistory = (trackingNumber: string) => {
-    console.log(`Check history for: ${trackingNumber}`);
-    // Your history logic here
+  const handleHistory = (id: string) => {
+    setSelectedPackageId(id);
+    historyModal.open();
   };
 
   return (
@@ -68,14 +54,20 @@ const HomePage = () => {
           Welcome Home
         </h1>
         <AddComponent />
-
-        <SimpleTrackingTable
+        <TrackingTable
           data={packages}
           onCheckHistory={handleHistory}
           isLoading={getPackagesQuery.isLoading}
         />
       </main>
       <Footer />
+      {selectedPackageId && (
+        <GetDeliveringHistory
+          id={selectedPackageId}
+          isOpen={historyModal.isOpen}
+          onClose={historyModal.close}
+        />
+      )}
     </div>
   );
 };

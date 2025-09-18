@@ -12,14 +12,12 @@ import usePackageMutations from "../../hooks/usePackageMutations";
 import { CreatePackage } from "../../../domains/package/createPackage";
 import { v4 as uuidv4 } from "uuid";
 
-
 interface UserIds {
   sender: string;
   recipient: string;
 }
 
 const AddComponent = () => {
-
   const [ids, setIds] = useState<UserIds>({ sender: "", recipient: "" });
 
   const senderModal = useToggle();
@@ -44,7 +42,6 @@ const AddComponent = () => {
   };
 
   const handleRecipientSubmit = (values: Omit<RecipientData, "id">) => {
-
     createRecipientMutation.mutate(values as RecipientData, {
       onSuccess: (data) => {
         setIds((prevId) => ({ ...prevId, recipient: data.id }));
@@ -127,39 +124,13 @@ const AddComponent = () => {
         toggle={packageModal.toggle}
         className="max-w-2xl"
       >
-        <div className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Create Package</h2>
-          <div className="space-y-2 mb-4">
-            <p>
-              <strong>Sender ID:</strong> {ids.sender}
-            </p>
-            <p>
-              <strong>Recipient ID:</strong> {ids.recipient}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handlePackageSubmit}
-              disabled={createPackageMutation.isPending}
-              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50"
-            >
-              {createPackageMutation.isPending
-                ? "Creating..."
-                : "Create Package"}
-            </button>
-            <button
-              onClick={packageModal.close}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-          </div>
-          {createPackageMutation.isError && (
-            <p className="text-red-500 mt-2">
-              Error: {createPackageMutation.error?.message}
-            </p>
-          )}
-        </div>
+        <AddPackage
+          sender={ids.sender}
+          recipient={ids.recipient}
+          handlePackageSubmit={handlePackageSubmit}
+          onClose={packageModal.close}
+          createPackageMutation={createPackageMutation}
+        />
       </Modal>
     </div>
   );
