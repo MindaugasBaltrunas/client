@@ -10,7 +10,7 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="flex flex-col h-screen bg-white text-gray-900 transition-colors duration-300 dark:bg-gray-800">
       <Header />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1">
         {children}
       </main>
       <Footer />

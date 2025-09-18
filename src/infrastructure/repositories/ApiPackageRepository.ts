@@ -3,15 +3,12 @@ import { createPackageApiClient } from '../api/clients/PackageApiClient';
 import { Package } from '../../domains/package/package';
 import { packageQueryKeys } from './utils/packageQueryKeys';
 import { handleApiError } from '../api/errors/ApiErrorHandler';
-import { MappedPackage, MappedPackageList, PackageHistoryListSchema, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
+import { MappedPackage, PackageHistoryListSchema, PackageListSchema, PackageSchema } from '../mappers/mapApiResponse';
 import { ApiErrorResponse } from '../../domains/api/api';
 import { CreatePackage } from '../../domains/package/createPackage';
 import { PackageHistory } from '../../domains/package/packageHistory';
 
-/**
- * Pure API Repository - Only handles API calls and basic React Query setup
- * No cache management logic - that's handled by the business layer
- */
+
 export const createApiPackageRepository = (packageApiClient: ReturnType<typeof createPackageApiClient>) => {
     return {
         // ==================== QUERIES ====================
@@ -38,6 +35,22 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                     }
                 },
                 enabled: !!id,
+                ...options,
+            }),
+
+        usePackageSearch: (trackingId: string, options?: UseQueryOptions<Package[]>) =>
+            useQuery({
+                queryKey: packageQueryKeys.search({ trackingId }),
+                queryFn: async (): Promise<Package[]> => {
+                    const apiRes = await packageApiClient.getSearchPackages(trackingId);
+                    return PackageListSchema.parse(apiRes);
+                },
+                enabled: !!trackingId,
+                staleTime: 0,
+                gcTime: 0,
+                refetchOnMount: 'always',
+                refetchOnWindowFocus: false,
+                retry: false,
                 ...options,
             }),
 

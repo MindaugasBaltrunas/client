@@ -1,15 +1,17 @@
 import { ApiClientConfig } from "../../../config/type";
 import {
   PackageApiResponse,
-  PackageListApiHistoryResponse
+  PackageListApiHistoryResponse,
+  PackageListApiResponse
 } from "../../../domains/api/api";
 import { CreatePackage } from "../../../domains/package/createPackage";
 import { request } from "../utils/request";
 
 export function createPackageApiClient(config: ApiClientConfig) {
   return {
-    getPackages: () => request<PackageApiResponse[]>("/Package", {}, config),
+    getPackages: () => request<PackageListApiResponse>("/Package", {}, config),
     getPackage: (id: string) => request<PackageApiResponse>(`/Package/${id}`, {}, config),
+    getSearchPackages: (trackingId: string) => request<PackageListApiResponse>(`/Package/search?trackingId=${trackingId}`, {}, config),
     getPackageHistory: (id: string) => request<PackageListApiHistoryResponse[]>(`/Package/history/${id}`, {}, config),
     createPackage: (data: CreatePackage) =>
       request<PackageApiResponse>("/Package", { method: "POST", body: JSON.stringify(data) }, config),

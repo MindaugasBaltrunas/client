@@ -1,3 +1,4 @@
+
 export const createQueryKeys = <T extends string>(entity: T) => {
     return {
         all: [entity] as const,
@@ -13,7 +14,8 @@ export const createQueryKeys = <T extends string>(entity: T) => {
 
         history: (id: string) => [...createQueryKeys(entity).all, 'history', id] as const,
 
-        search: (query: string) => [...createQueryKeys(entity).all, 'search', query] as const,
+        search: (params: { trackingId?: string; status?: number }) =>
+            [...createQueryKeys(entity).all, 'search', params] as const,
 
         status: (status: string | number) => [...createQueryKeys(entity).all, 'status', status] as const,
     };

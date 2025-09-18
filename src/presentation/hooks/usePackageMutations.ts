@@ -60,6 +60,9 @@ export const usePackageMutations = (
     const usePackage = (id: string, options?: UseQueryOptions<Package | null>) =>
         repository.usePackage(id, options);
 
+    const usePackageSearch = (tracking: string, options?: UseQueryOptions<Package[]>) =>
+        repository.usePackageSearch(tracking, options);
+
     const usePackageHistory = (id: string) =>
         repository.usePackageHistory(id);
 
@@ -130,6 +133,7 @@ export const usePackageMutations = (
     };
 
     return {
+        usePackageSearch,
         usePackages,
         usePackage,
         usePackageHistory,

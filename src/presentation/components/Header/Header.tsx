@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../../app/providers/ThemeProvider";
+import SearchPackage from "../Search/SearchPackage";
 
 interface HeaderProps {
   className?: string;
@@ -23,6 +24,9 @@ const Header = ({ className = "" }: HeaderProps) => {
           >
             Package Tracking App
           </h1>
+          <div>
+            <SearchPackage/>
+          </div>
          
           <button
             onClick={toggleTheme}

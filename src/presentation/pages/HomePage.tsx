@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import Footer from "../components/Footer/Footer";
-import Header from "../components/Header/Header";
 import { TrackingTable } from "../components/Table/Table";
 import AddComponent from "../components/Add/AddComponent";
 import usePackageMutations from "../hooks/usePackageMutations";
