@@ -7,17 +7,7 @@ import usePackageMutations from "../hooks/usePackageMutations";
 import { Package } from "../../domains/package/package";
 import { useToggle } from "../hooks/useToggle";
 import GetDeliveringHistory from "../components/Get/GetHistory";
-
-const statusNameMap: Record<string, string> = {
-  Created: "Created",
-  Sent: "In Transit",
-  Accepted: "Delivered",
-  Cancelled: "Canceled",
-  Returned: "Returned",
-};
-
-const getStatusName = (status: string): string =>
-  statusNameMap[status] ?? status;
+import ChangeStatus from "../components/Update/ChangeStatus";
 
 const HomePage = () => {
   const { usePackages } = usePackageMutations();
@@ -28,14 +18,22 @@ const HomePage = () => {
   >([]);
 
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
-  const historyModal = useToggle();
+  const [selectedStatus, setSelectedStatus] = useState<{
+    id: string;
+    status: string;
+  } | null>(null);
 
-  useEffect(() => {
+  const [selectedTracking, setSelectedTracking] = useState<string>("");
+
+  const historyModal = useToggle();
+  const statusModal = useToggle();
+
+  useEffect(() => {    
     if (getPackagesQuery?.data) {
       const transformedData = getPackagesQuery.data.map((pkg: Package) => ({
         trackingNumber: pkg.trackingNumber,
         id: pkg.id,
-        status: getStatusName(pkg.status),
+        status: pkg.status,
       }));
       setPackages(transformedData);
     }
@@ -44,6 +42,15 @@ const HomePage = () => {
   const handleHistory = (id: string) => {
     setSelectedPackageId(id);
     historyModal.open();
+  };
+
+  const handleStatusClick = (status: string, id: string) => {
+    setSelectedStatus({ id, status });
+    statusModal.open();
+  };
+
+  const handleTrackingNumberClick = (id: string) => {
+    setSelectedTracking(id);
   };
 
   return (
@@ -56,16 +63,30 @@ const HomePage = () => {
         <AddComponent />
         <TrackingTable
           data={packages}
+          onStatusClick={handleStatusClick}
+          onTrackingNumberClick={handleTrackingNumberClick}
           onCheckHistory={handleHistory}
           isLoading={getPackagesQuery.isLoading}
         />
       </main>
       <Footer />
+
+      {/* Delivery History Modal */}
       {selectedPackageId && (
         <GetDeliveringHistory
           id={selectedPackageId}
           isOpen={historyModal.isOpen}
           onClose={historyModal.close}
+        />
+      )}
+
+      {/* Change Status Modal */}
+      {selectedStatus && (
+        <ChangeStatus
+          id={selectedStatus.id}
+          status={selectedStatus.status}
+          isOpen={statusModal.isOpen}
+          onClose={statusModal.close}
         />
       )}
     </div>

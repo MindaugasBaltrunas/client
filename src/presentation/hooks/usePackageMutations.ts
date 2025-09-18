@@ -11,7 +11,6 @@ import { ToastHandler } from './type';
 import { CreatePackage } from '../../domains/package/createPackage';
 import { MappedPackage } from '../../infrastructure/mappers/mapApiResponse';
 import { packageQueryKeys } from '../../infrastructure/repositories/utils/packageQueryKeys';
-import { PackageHistory } from '../../domains/package/packageHistory';
 
 const statusNameMap: Record<number, string> = {
     [PackageStatus.Created]: 'Created',
@@ -74,15 +73,6 @@ export const usePackageMutations = (
                     const newData = [pkg, ...oldData];
                     return newData;
                 });
-
-                // queryClient.setQueryData(packageQueryKeys.detail(pkg.id), pkg);
-
-                // Invalidate to ensure consistency
-                // queryClient.invalidateQueries({ queryKey: packageQueryKeys.lists() });
-
-                console.log('Cache update completed');
-
-                // STEP 2: HANDLE TOAST NOTIFICATIONS
                 handlers.handleSuccess(
                     pkg,
                     variables,
@@ -90,13 +80,10 @@ export const usePackageMutations = (
                     context,
                     `Package ${pkg.trackingNumber} created successfully!`
                 );
-
-                console.log('=== usePackageMutations: CACHE UPDATE COMPLETED ===');
             },
             onError: (error: ApiErrorResponse, variables, onMutateResult, context) => {
                 handlers.handleError(error, variables, onMutateResult, context, 'Failed to create package');
             },
-            // Don't spread options here as it would override our onSuccess
             mutationKey: options?.mutationKey,
             retry: options?.retry,
             retryDelay: options?.retryDelay,
@@ -107,17 +94,23 @@ export const usePackageMutations = (
         options?: MutationConfig<Package, ApiErrorResponse, { packageId: string; status: number }>
     ) => {
         const handlers = createMutationHandlers(defaultToastHandler, options);
-
         return repository.useUpdatePackageStatusRaw({
             onSuccess: (pkg, variables, onMutateResult, context) => {
-                console.log('=== usePackageMutations: STATUS UPDATE STARTED ===');
+                // const existingData = queryClient.getQueryData(packageQueryKeys.detail(pkg.id));
+                // console.log('Existing cache data:', existingData);
 
-                // STEP 1: DO CACHE INVALIDATION FIRST
                 queryClient.setQueryData(packageQueryKeys.detail(pkg.id), pkg);
-                // queryClient.invalidateQueries({ queryKey: packageQueryKeys.lists() });
-                queryClient.invalidateQueries({ queryKey: packageQueryKeys.history(pkg.id) });
 
-                // STEP 2: HANDLE TOAST NOTIFICATIONS
+                queryClient.setQueryData(packageQueryKeys.lists(), (oldPackages: Package[] | undefined) => {
+                    if (!oldPackages) return oldPackages;
+
+                    return oldPackages.map(p =>
+                        p.id === pkg.id
+                            ? { ...p, status: pkg.status }
+                            : p
+                    );
+                });
+
                 const statusName = getStatusName(variables.status);
                 handlers.handleSuccess(
                     pkg,
@@ -126,8 +119,6 @@ export const usePackageMutations = (
                     context,
                     `Package status updated to ${statusName}`
                 );
-
-                console.log('=== usePackageMutations: STATUS UPDATE COMPLETED ===');
             },
             onError: (error: ApiErrorResponse, variables, onMutateResult, context) => {
                 handlers.handleError(error, variables, onMutateResult, context, 'Failed to update package status');

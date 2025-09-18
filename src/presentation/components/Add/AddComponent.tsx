@@ -58,8 +58,7 @@ const AddComponent = () => {
     };
 
     createPackageMutation.mutate(createPackage, {
-      onSuccess: (data) => {
-        console.log("Package created:", data);
+      onSuccess: () => {
         packageModal.close();
         setIds({ sender: "", recipient: "" });
       },

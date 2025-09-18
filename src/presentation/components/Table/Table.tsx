@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { FC, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -15,6 +15,8 @@ type TrackingData = {
 interface TrackingTableProps {
   data: TrackingData[];
   onCheckHistory?: (id: string) => void;
+  onStatusClick?: (status: string, id: string) => void;
+  onTrackingNumberClick?: (id: string) => void;
   isLoading?: boolean;
 }
 
@@ -38,9 +40,11 @@ const LoadingSkeleton: React.FC = () => (
   </>
 );
 
-export const TrackingTable: React.FC<TrackingTableProps> = ({
+export const TrackingTable: FC<TrackingTableProps> = ({
   data,
   onCheckHistory,
+  onStatusClick,
+  onTrackingNumberClick,
   isLoading = false,
 }) => {
   const columns = useMemo(
@@ -48,7 +52,14 @@ export const TrackingTable: React.FC<TrackingTableProps> = ({
       columnHelper.accessor("trackingNumber", {
         header: "Tracking Number",
         cell: (info) => (
-          <span className="font-mono text-blue-600 font-medium">
+          <span
+            onClick={() => onTrackingNumberClick?.(info.row.original.id)}
+            className={`font-mono text-blue-600 font-medium ${
+              onTrackingNumberClick 
+                ? 'cursor-pointer hover:text-blue-800 hover:underline transition-colors' 
+                : ''
+            }`}
+          >
             {info.getValue()}
           </span>
         ),
@@ -79,9 +90,14 @@ export const TrackingTable: React.FC<TrackingTableProps> = ({
 
           return (
             <span
+              onClick={() => onStatusClick?.(status, info.row.original.id)}
               className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
                 status
-              )}`}
+              )} ${
+                onStatusClick 
+                  ? 'cursor-pointer hover:opacity-80 transition-opacity' 
+                  : ''
+              }`}
             >
               {status.replace("_", " ").toUpperCase()}
             </span>
@@ -102,7 +118,7 @@ export const TrackingTable: React.FC<TrackingTableProps> = ({
         ),
       }),
     ],
-    [onCheckHistory, isLoading]
+    [onCheckHistory, onStatusClick, onTrackingNumberClick, isLoading]
   );
 
   const table = useReactTable({
