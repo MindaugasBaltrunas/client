@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
 import Footer from "../components/Footer/Footer";
 import Header from "../components/Header/Header";
 import { TrackingTable } from "../components/Table/Table";
@@ -8,6 +9,7 @@ import { Package } from "../../domains/package/package";
 import { useToggle } from "../hooks/useToggle";
 import GetDeliveringHistory from "../components/Get/GetHistory";
 import ChangeStatus from "../components/Update/ChangeStatus";
+import { TrackingData } from "../components/types/TrackingData";
 
 const HomePage = () => {
   const { usePackages } = usePackageMutations();
@@ -16,6 +18,8 @@ const HomePage = () => {
   const [packages, setPackages] = useState<
     { trackingNumber: string; status: string; id: string }[]
   >([]);
+
+  console.log(packages);
 
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<{
@@ -28,13 +32,18 @@ const HomePage = () => {
   const historyModal = useToggle();
   const statusModal = useToggle();
 
-  useEffect(() => {    
+  useEffect(() => {
     if (getPackagesQuery?.data) {
       const transformedData = getPackagesQuery.data.map((pkg: Package) => ({
         trackingNumber: pkg.trackingNumber,
         id: pkg.id,
         status: pkg.status,
+        recipient: pkg.recipient.name,
+        sender: pkg.sender.name,
+        created: format(new Date(pkg.createdAt), "yyyy-MM-dd HH:mm"),
       }));
+      console.log(transformedData);
+
       setPackages(transformedData);
     }
   }, [getPackagesQuery.data]);
@@ -49,7 +58,7 @@ const HomePage = () => {
     statusModal.open();
   };
 
-  const handleTrackingNumberClick = (id: string) => {
+  const handleTrackingNumberClick = (status: string, id: string) => {
     setSelectedTracking(id);
   };
 
@@ -62,16 +71,14 @@ const HomePage = () => {
         </h1>
         <AddComponent />
         <TrackingTable
-          data={packages}
+          data={packages as TrackingData[]}
           onStatusClick={handleStatusClick}
-          onTrackingNumberClick={handleTrackingNumberClick}
           onCheckHistory={handleHistory}
           isLoading={getPackagesQuery.isLoading}
         />
       </main>
       <Footer />
 
-      {/* Delivery History Modal */}
       {selectedPackageId && (
         <GetDeliveringHistory
           id={selectedPackageId}
@@ -80,7 +87,6 @@ const HomePage = () => {
         />
       )}
 
-      {/* Change Status Modal */}
       {selectedStatus && (
         <ChangeStatus
           id={selectedStatus.id}

@@ -5,18 +5,12 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-
-type TrackingData = {
-  trackingNumber: string;
-  status: string;
-  id: string;
-};
+import { TrackingData } from "../types/TrackingData";
 
 interface TrackingTableProps {
   data: TrackingData[];
   onCheckHistory?: (id: string) => void;
   onStatusClick?: (status: string, id: string) => void;
-  onTrackingNumberClick?: (id: string) => void;
   isLoading?: boolean;
 }
 
@@ -44,21 +38,26 @@ export const TrackingTable: FC<TrackingTableProps> = ({
   data,
   onCheckHistory,
   onStatusClick,
-  onTrackingNumberClick,
   isLoading = false,
 }) => {
   const columns = useMemo(
     () => [
+      columnHelper.accessor("created", {
+        header: "CREATED",
+        cell: (info) => <span>{info.getValue()}</span>,
+      }),
+      columnHelper.accessor("recipient", {
+        header: "RECIPIENT",
+        cell: (info) => <span>{info.getValue()}</span>,
+      }),
+      columnHelper.accessor("sender", {
+        header: "SENDER",
+        cell: (info) => <span>{info.getValue()}</span>,
+      }),
       columnHelper.accessor("trackingNumber", {
         header: "Tracking Number",
         cell: (info) => (
           <span
-            onClick={() => onTrackingNumberClick?.(info.row.original.id)}
-            className={`font-mono text-blue-600 font-medium ${
-              onTrackingNumberClick 
-                ? 'cursor-pointer hover:text-blue-800 hover:underline transition-colors' 
-                : ''
-            }`}
           >
             {info.getValue()}
           </span>
@@ -94,9 +93,9 @@ export const TrackingTable: FC<TrackingTableProps> = ({
               className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
                 status
               )} ${
-                onStatusClick 
-                  ? 'cursor-pointer hover:opacity-80 transition-opacity' 
-                  : ''
+                onStatusClick
+                  ? "cursor-pointer hover:opacity-80 transition-opacity"
+                  : ""
               }`}
             >
               {status.replace("_", " ").toUpperCase()}
@@ -118,7 +117,7 @@ export const TrackingTable: FC<TrackingTableProps> = ({
         ),
       }),
     ],
-    [onCheckHistory, onStatusClick, onTrackingNumberClick, isLoading]
+    [onCheckHistory, onStatusClick, isLoading]
   );
 
   const table = useReactTable({
