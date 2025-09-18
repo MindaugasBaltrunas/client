@@ -15,7 +15,7 @@ import { PackageHistory } from '../../domains/package/packageHistory';
 export const createApiPackageRepository = (packageApiClient: ReturnType<typeof createPackageApiClient>) => {
     return {
         // ==================== QUERIES ====================
-        
+
         usePackages: (options?: UseQueryOptions<Package[]>) =>
             useQuery<Package[]>({
                 queryKey: packageQueryKeys.lists(),
@@ -52,11 +52,13 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                         throw handleApiError(error, `getPackageHistory(${id})`);
                     }
                 },
-                enabled: !!id
+                enabled: !!id,
+                staleTime: 0,
+                gcTime: 0,
             }),
 
         // ==================== MUTATIONS ====================
-        
+
         useCreatePackageRaw: (options?: UseMutationOptions<MappedPackage, ApiErrorResponse, CreatePackage>) =>
             useMutation<MappedPackage, ApiErrorResponse, CreatePackage>({
                 mutationFn: async (data: CreatePackage) => {
