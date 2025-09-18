@@ -11,6 +11,7 @@ interface TrackingTableProps {
   data: TrackingData[];
   onCheckHistory?: (id: string) => void;
   onStatusClick?: (status: string, id: string) => void;
+  onCheckInfo?: (id: string) => void;
   isLoading?: boolean;
 }
 
@@ -38,10 +39,40 @@ export const TrackingTable: FC<TrackingTableProps> = ({
   data,
   onCheckHistory,
   onStatusClick,
+  onCheckInfo,
   isLoading = false,
 }) => {
   const columns = useMemo(
     () => [
+      columnHelper.display({
+        id: "_1",
+        header: "INFO",
+        cell: (info) => (
+          <button
+            onClick={() => onCheckInfo?.(info.row.original.id)}
+            disabled={!info.row.original.id || isLoading}
+            type="button"
+            className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-full text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-300"
+          >
+            <svg
+              className="w-4 h-4"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 10"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M1 5h12m0 0L9 1m4 4L9 9"
+              />
+            </svg>
+            <span className="sr-only">Icon description</span>
+          </button>
+        ),
+      }),
       columnHelper.accessor("created", {
         header: "CREATED",
         cell: (info) => <span>{info.getValue()}</span>,
@@ -56,12 +87,7 @@ export const TrackingTable: FC<TrackingTableProps> = ({
       }),
       columnHelper.accessor("trackingNumber", {
         header: "Tracking Number",
-        cell: (info) => (
-          <span
-          >
-            {info.getValue()}
-          </span>
-        ),
+        cell: (info) => <span>{info.getValue()}</span>,
       }),
       columnHelper.accessor("status", {
         header: "Status",
@@ -104,8 +130,8 @@ export const TrackingTable: FC<TrackingTableProps> = ({
         },
       }),
       columnHelper.display({
-        id: "actions",
-        header: "Actions",
+        id: "_2",
+        header: "history",
         cell: (info) => (
           <button
             onClick={() => onCheckHistory?.(info.row.original.id)}

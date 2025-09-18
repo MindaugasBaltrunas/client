@@ -10,8 +10,11 @@ import { useToggle } from "../hooks/useToggle";
 import GetDeliveringHistory from "../components/Get/GetHistory";
 import ChangeStatus from "../components/Update/ChangeStatus";
 import { TrackingData } from "../components/types/TrackingData";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
   const { usePackages } = usePackageMutations();
   const getPackagesQuery = usePackages();
 
@@ -19,15 +22,11 @@ const HomePage = () => {
     { trackingNumber: string; status: string; id: string }[]
   >([]);
 
-  console.log(packages);
-
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<{
     id: string;
     status: string;
   } | null>(null);
-
-  const [selectedTracking, setSelectedTracking] = useState<string>("");
 
   const historyModal = useToggle();
   const statusModal = useToggle();
@@ -42,8 +41,6 @@ const HomePage = () => {
         sender: pkg.sender.name,
         created: format(new Date(pkg.createdAt), "yyyy-MM-dd HH:mm"),
       }));
-      console.log(transformedData);
-
       setPackages(transformedData);
     }
   }, [getPackagesQuery.data]);
@@ -58,13 +55,13 @@ const HomePage = () => {
     statusModal.open();
   };
 
-  const handleTrackingNumberClick = (status: string, id: string) => {
-    setSelectedTracking(id);
+  const handlerInfo = (id: string) => {
+    navigate(`/package/${id}`, { replace: true });
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
+    <div className="">
+    
       <main className="flex-1 max-w-7xl mx-auto py-6 px-4 overflow-auto">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Welcome Home
@@ -74,10 +71,11 @@ const HomePage = () => {
           data={packages as TrackingData[]}
           onStatusClick={handleStatusClick}
           onCheckHistory={handleHistory}
+          onCheckInfo={handlerInfo}
           isLoading={getPackagesQuery.isLoading}
         />
       </main>
-      <Footer />
+
 
       {selectedPackageId && (
         <GetDeliveringHistory
