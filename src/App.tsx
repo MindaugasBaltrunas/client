@@ -4,7 +4,7 @@ import { FormikProvider } from "./app/providers/formik/FormikProvider";
 import Layout from "./presentation/layouts/Layout";
 import { AppRoutes } from "./shared/routing/AppRoutes";
 import { QueryProvider } from "./providers/QueryProvider";
-import { SelectFieldProvider } from "./app/providers/selectFieldProvider";
+import { SelectFieldProvider } from "./app/providers/SelectFieldProvider";
 
 function App() {
   return (

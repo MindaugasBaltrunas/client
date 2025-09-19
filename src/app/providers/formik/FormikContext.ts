@@ -1,5 +1,4 @@
-import { createContext, useContext } from 'react';
-import { FormikConfig, FormikValues } from 'formik';
+import { createContext } from 'react';
 
 export interface FormikContextType {
   validateOnBlur: boolean;
@@ -13,18 +12,3 @@ export const FormikContext = createContext<FormikContextType>({
   validateOnChange: false,
   validateOnMount: false,
 });
-
-export const useFormikConfig = () => useContext(FormikContext);
-
-export function createFormikConfig<Values extends FormikValues>(
-  config: Omit<FormikConfig<Values>, 'validateOnBlur' | 'validateOnChange' | 'validateOnMount'> & 
-         Partial<Pick<FormikConfig<Values>, 'validateOnBlur' | 'validateOnChange' | 'validateOnMount'>>,
-  context: FormikContextType
-): FormikConfig<Values> {
-  return {
-    ...config,
-    validateOnBlur: config.validateOnBlur ?? context.validateOnBlur,
-    validateOnChange: config.validateOnChange ?? context.validateOnChange,
-    validateOnMount: config.validateOnMount ?? context.validateOnMount,
-  };
-}

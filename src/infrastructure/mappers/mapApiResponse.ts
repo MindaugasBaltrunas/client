@@ -55,7 +55,6 @@ export const PackageHistoryListSchema = z.array(PackageHistorySchema);
 export type MappedSender = z.infer<typeof SenderSchema>;
 export type MappedRecipient = z.infer<typeof RecipientSchema>;
 export type MappedPackage = z.infer<typeof PackageSchema>;
-export type MappedSimplePackage = z.infer<typeof SimplePackageSchema>;
 export type MappedPackageHistory = z.infer<typeof PackageHistorySchema>;
 export type MappedPackageList = z.infer<typeof PackageListSchema>;
 export type MappedSimplePackageList = z.infer<typeof SimplePackageListSchema>;
