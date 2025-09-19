@@ -107,7 +107,9 @@ const AddComponent = () => {
         toggle={senderModal.toggle}
         className="max-w-2xl"
       >
-        <AddSender onSubmit={handleSenderSubmit} />
+        <div className="max-w-md mx-auto space-y-4">
+          <AddSender onSubmit={handleSenderSubmit} />
+        </div>
       </Modal>
 
       <Modal
@@ -115,7 +117,9 @@ const AddComponent = () => {
         toggle={recipientModal.toggle}
         className="max-w-2xl"
       >
-        <AddRecipient onSubmit={handleRecipientSubmit} />
+        <div className="max-w-md mx-auto space-y-4">
+          <AddRecipient onSubmit={handleRecipientSubmit} />
+        </div>
       </Modal>
 
       <Modal

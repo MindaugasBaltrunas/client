@@ -1,10 +1,10 @@
 import {  Route, Routes } from "react-router-dom";
-import { lazy } from "react";
+import { FC, lazy } from "react";
 
 const HomePage = lazy(() => import("../../presentation/pages/HomePage"));
 const PackagePage = lazy(() => import("../../presentation/pages/PackagePage"));
 
-export const AppRoutes: React.FC = () => {
+export const AppRoutes: FC = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
