@@ -4,6 +4,7 @@ import { FormikProvider } from "./app/providers/formik/FormikProvider";
 import Layout from "./presentation/layouts/Layout";
 import { AppRoutes } from "./shared/routing/AppRoutes";
 import { QueryProvider } from "./providers/QueryProvider";
+import { SelectFieldProvider } from "./app/providers/selectFieldProvider";
 
 function App() {
   return (
@@ -17,9 +18,11 @@ function App() {
               validateOnMount: false,
             }}
           >
-            <Layout>
-              <AppRoutes />
-            </Layout>
+            <SelectFieldProvider>
+              <Layout>
+                <AppRoutes />
+              </Layout>
+            </SelectFieldProvider>
           </FormikProvider>
         </ThemeProvider>
       </QueryProvider>

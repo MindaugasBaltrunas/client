@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from "react";
+import React, { FC, useMemo, useState, useEffect, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -6,6 +6,9 @@ import {
   createColumnHelper,
 } from "@tanstack/react-table";
 import { TrackingData } from "../types/TrackingData";
+import { PackageStatus } from "../../../domains/packageStatus/packageStatus";
+import FilterStatus from "../Get/FilterStatus";
+import { Package } from "../../../domains/package/package";
 
 interface TrackingTableProps {
   data: TrackingData[];
@@ -13,6 +16,10 @@ interface TrackingTableProps {
   onStatusClick?: (status: string, id: string) => void;
   onCheckInfo?: (id: string) => void;
   isLoading?: boolean;
+  callBackFilteredData?: (packages: TrackingData[]) => void;
+  onFilterChange?: (selectedStatus: PackageStatus | null) => void;
+  onClear?: () => void;
+  showAll?: boolean;
 }
 
 const columnHelper = createColumnHelper<TrackingData>();
@@ -41,7 +48,52 @@ export const TrackingTable: FC<TrackingTableProps> = ({
   onStatusClick,
   onCheckInfo,
   isLoading = false,
+  callBackFilteredData,
+  onFilterChange,
+  onClear,
+  showAll,
 }) => {
+  const [tableData, setTableData] = useState<TrackingData[]>(data);
+  const [isFiltered, setIsFiltered] = useState(false);
+
+  useEffect(() => {
+    if (!isFiltered) {
+      setTableData(data);
+    }
+  }, [data, isFiltered]);
+
+  const handleFilteredData = useCallback((packages: Package[]) => {
+    const convertedData: TrackingData[] = packages.map(pkg => ({
+      id: pkg.id,
+      created: pkg.createdAt,
+      recipient: typeof pkg.recipient,
+      sender: typeof pkg.sender,
+      trackingNumber: pkg.trackingNumber,
+      status: pkg.status,
+    }));
+    
+    setTableData(convertedData);
+    setIsFiltered(true); 
+    
+    if (callBackFilteredData) {
+      callBackFilteredData(convertedData);
+    }
+  }, [callBackFilteredData]);
+
+  const handleFilterChange = useCallback((status: PackageStatus | null) => {
+    if (status === null) {
+      setIsFiltered(false); 
+      setTableData(data);
+    }
+    onFilterChange?.(status);
+  }, [data, onFilterChange]);
+
+  const handleClear = useCallback(() => {
+    setIsFiltered(false);
+    setTableData(data);
+    onClear?.();
+  }, [data, onClear]);
+
   const columns = useMemo(
     () => [
       columnHelper.display({
@@ -143,17 +195,26 @@ export const TrackingTable: FC<TrackingTableProps> = ({
         ),
       }),
     ],
-    [onCheckHistory, onStatusClick, isLoading]
+    [isLoading, onCheckInfo, onStatusClick, onCheckHistory]
   );
 
   const table = useReactTable({
-    data,
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   return (
     <div className="p-4">
+      <div className="mb-6">
+        <FilterStatus
+          callBackFilteredData={handleFilteredData}
+          onFilterChange={handleFilterChange}
+          onClear={handleClear}
+          showAll={showAll}
+        />
+      </div>
+
       <div className="overflow-x-auto shadow-lg ring-1 ring-black ring-opacity-5 md:rounded-lg">
         <table className="min-w-full bg-white">
           <thead className="bg-gray-50">
@@ -178,9 +239,9 @@ export const TrackingTable: FC<TrackingTableProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {isLoading ? (
               <LoadingSkeleton />
-            ) : data.length === 0 ? (
+            ) : tableData.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                   No tracking data available
                 </td>
               </tr>
@@ -212,7 +273,7 @@ export const TrackingTable: FC<TrackingTableProps> = ({
             Loading packages...
           </div>
         ) : (
-          `Total items: ${data.length}`
+          `Total items: ${tableData.length}`
         )}
       </div>
     </div>

@@ -2,7 +2,7 @@ import { useStatusChange } from "../../hooks/useStatusChange";
 import AlertMessage from "../AlertMessage/AlertMessage";
 import ConfirmationDialog from "../Confirmation/ConfirmationDialog";
 import Modal from "../Modal/Modal";
-import StatusForm from "./StatusForm";
+import StatusForm from "../Status/StatusForm";
 
 interface Props {
   id: string;
@@ -51,6 +51,7 @@ const ChangeStatus = ({ id, status, isOpen, onClose }: Props) => {
             isDisabled={isLoading}
             onSubmit={handleSubmit}
             onCancel={handleClose}
+            
           />
         )}
       </div>

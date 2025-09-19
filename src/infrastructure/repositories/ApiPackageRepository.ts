@@ -54,6 +54,22 @@ export const createApiPackageRepository = (packageApiClient: ReturnType<typeof c
                 ...options,
             }),
 
+        usePackageFilter: (status: number, options?: UseQueryOptions<Package[]>) =>
+            useQuery({
+                queryKey: packageQueryKeys.search({ status }),
+                queryFn: async (): Promise<Package[]> => {
+                    const apiRes = await packageApiClient.getFilterPackages(status);
+                    return PackageListSchema.parse(apiRes);
+                },
+                enabled: !!status,
+                staleTime: 0,
+                gcTime: 0,
+                refetchOnMount: 'always',
+                refetchOnWindowFocus: false,
+                retry: false,
+                ...options,
+            }),
+
         usePackageHistory: (id: string) =>
             useQuery<PackageHistory[] | null>({
                 queryKey: packageQueryKeys.history(id),

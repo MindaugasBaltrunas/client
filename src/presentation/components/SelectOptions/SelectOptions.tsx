@@ -7,21 +7,27 @@ interface SelectOptionsProps {
   displayKey?: string;
   styles?: Record<string, string>;
   name?: string;
+  value?: string;
+  onChange?: (event: React.FormEvent<HTMLSelectElement>) => void;
 }
 
 const SelectOptions: React.FC<SelectOptionsProps> = ({
   options,
   displayKey,
   styles,
-  name
+  name,
+  value: externalValue,
+  onChange: externalOnChange
 }) => {
   const { selectValue, setSelectValue } = useSelectFieldContext();
+  
+  const currentValue = externalValue !== undefined ? externalValue : selectValue;
+  
   const isObjectArray = options && options.length > 0 && typeof options[0] === 'object';
-
+  
   const optionElements = options?.map((option, index) => {
     const value = isObjectArray ? option.id : option;
     const displayText = isObjectArray && displayKey ? option[displayKey] : option;
-
     return (
       <option value={value} key={index}>
         {displayText}
@@ -30,12 +36,16 @@ const SelectOptions: React.FC<SelectOptionsProps> = ({
   });
 
   const handleSelectChange = (event: React.FormEvent<HTMLSelectElement>) => {
-    setSelectValue(event.currentTarget.value);
+    if (externalOnChange) {
+      externalOnChange(event);
+    } else {
+      setSelectValue(event.currentTarget.value);
+    }
   };
 
   return (
     <SelectField
-      value={selectValue}
+      value={currentValue}
       name={name || "select"}
       onChange={handleSelectChange}
       style={styles}

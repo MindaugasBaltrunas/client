@@ -16,9 +16,7 @@ const HomePage = () => {
   const { usePackages } = usePackageMutations();
   const getPackagesQuery = usePackages();
 
-  const [packages, setPackages] = useState<
-    { trackingNumber: string; status: string; id: string }[]
-  >([]);
+  const [packages, setPackages] = useState<TrackingData[]>([]);
 
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<{
@@ -59,21 +57,19 @@ const HomePage = () => {
 
   return (
     <div className="">
-    
       <main className="flex-1 max-w-7xl mx-auto py-6 px-4 overflow-auto">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Welcome Home
         </h1>
         <AddComponent />
         <TrackingTable
-          data={packages as TrackingData[]}
+          data={packages}
           onStatusClick={handleStatusClick}
           onCheckHistory={handleHistory}
           onCheckInfo={handlerInfo}
           isLoading={getPackagesQuery.isLoading}
         />
       </main>
-
 
       {selectedPackageId && (
         <GetDeliveringHistory
